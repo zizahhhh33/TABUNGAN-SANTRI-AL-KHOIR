@@ -1,0 +1,2173 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabungan Santri - Pondok Pesantren Al-Khoir Palembani</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .islamic-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(34, 197, 94, 0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .number-input {
+            text-align: right;
+        }
+        
+        .print-area {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-area {
+                margin: 0;
+                padding: 0;
+            }
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+        
+        .modal {
+            backdrop-filter: blur(4px);
+        }
+
+        .clock-display {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .balance-negative {
+            color: #DC2626;
+        }
+
+        .balance-positive {
+            color: #059669;
+        }
+
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center islamic-pattern">
+        <div class="max-w-md w-full mx-4">
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <div class="gradient-bg px-8 py-12 text-center text-white">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-white rounded-full flex items-center justify-center">
+                        <img id="loginLogo" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d2b16b0b-214d-4e29-8b53-e338a9365068.png" alt="Logo Pondok Pesantren Al-Khoir Palembani dengan kaligrafi islami berwarna hijau dan emas dalam bentuk bulat" class="w-16 h-16 rounded-full" />
+                    </div>
+                    <h1 class="text-2xl font-bold mb-2">PONDOK PESANTREN<br>AL-KHOIR PALEMBANI</h1>
+                    <p class="text-sm opacity-90">معهٰد الخير فا لمبانى</p>
+                    <p class="text-xs opacity-80 mt-2">Sistem Tabungan Santri</p>
+                </div>
+                <div class="px-8 py-8">
+                    <form id="loginForm">
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Username</label>
+                            <input type="text" id="username" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Masukkan username" required>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                            <input type="password" id="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Masukkan password" required>
+                        </div>
+                        <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:shadow-lg transition duration-300">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Masuk
+                        </button>
+                    </form>
+                    <div class="mt-4 text-center text-sm text-gray-600">
+                        <p><strong>Demo Login:</strong></p>
+                        <p>Admin: admin / admin123</p>
+                        <p>Santri: ahmad / santri123</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="gradient-bg text-white shadow-lg sticky-header">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <img id="headerLogo" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7c9c4a16-ae5e-4bca-ba76-e639725cb120.png" alt="Logo Pondok Pesantren Al-Khoir Palembani dengan kaligrafi islami berwarna hijau dan emas" class="w-12 h-12 rounded-full bg-white p-1" />
+                        <div>
+                            <h1 class="text-lg font-bold">PONDOK PESANTREN AL-KHOIR PALEMBANI</h1>
+                            <p class="text-sm opacity-90">Sistem Tabungan Santri</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- Quick Search -->
+                        <div class="hidden md:block relative">
+                            <input type="text" id="quickSearch" placeholder="Cari santri..." class="px-3 py-2 text-gray-800 rounded-lg text-sm w-48 focus:ring-2 focus:ring-green-300">
+                            <div id="quickSearchResults" class="absolute top-full left-0 right-0 bg-white shadow-lg rounded-lg mt-1 max-h-60 overflow-y-auto hidden z-50"></div>
+                        </div>
+                        <span class="hidden md:block text-sm">
+                            <i class="fas fa-user-circle mr-1"></i>
+                            <span id="currentUser">Admin</span>
+                            <span id="currentRole" class="text-xs opacity-75">(Admin)</span>
+                        </span>
+                        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm transition duration-300">
+                            <i class="fas fa-sign-out-alt mr-1"></i>Keluar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav id="mainNav" class="bg-white shadow-md sticky-header">
+            <div class="container mx-auto px-4">
+                <div class="flex space-x-1 overflow-x-auto">
+                    <button onclick="showSection('dashboard')" class="nav-btn active px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-green-500 text-green-600 transition duration-300">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </button>
+                    <button onclick="showSection('santri')" class="nav-btn px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-green-500 transition duration-300">
+                        <i class="fas fa-users mr-2"></i>Data Santri
+                    </button>
+                    <button onclick="showSection('transaksi')" class="nav-btn px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-green-500 transition duration-300">
+                        <i class="fas fa-exchange-alt mr-2"></i>Transaksi
+                    </button>
+                    <button onclick="showSection('laporan')" class="nav-btn px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-green-500 transition duration-300">
+                        <i class="fas fa-chart-line mr-2"></i>Laporan
+                    </button>
+                    <button onclick="showSection('pengaturan')" class="nav-btn px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent hover:border-green-500 transition duration-300">
+                        <i class="fas fa-cog mr-2"></i>Pengaturan
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="container mx-auto px-4 py-8">
+            <!-- Real-time Clock -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-8 text-center">
+                <div id="realTimeClock" class="text-3xl clock-display text-gray-800 mb-2"></div>
+                <div id="realTimeDate" class="text-lg text-gray-600"></div>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Dashboard</h2>
+                <p class="text-gray-600">Ringkasan Tabungan Santri</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <i class="fas fa-arrow-up text-green-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Total Pemasukan</h3>
+                            <p id="totalPemasukan" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-red-100 rounded-lg">
+                            <i class="fas fa-arrow-down text-red-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Total Penarikan</h3>
+                            <p id="totalPenarikan" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <i class="fas fa-wallet text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Total Keseluruhan Uang</h3>
+                            <p id="totalKeseluruhan" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-yellow-100 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Total Minus Santri</h3>
+                            <p id="totalMinusSantri" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter and Search -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter Kelas</label>
+                        <select id="filterKelas" onchange="filterDashboard()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">Semua Kelas</option>
+                            <option value="7">Kelas 7</option>
+                            <option value="8">Kelas 8</option>
+                            <option value="9">Kelas 9</option>
+                            <option value="10">Kelas 10</option>
+                            <option value="11">Kelas 11</option>
+                            <option value="12">Kelas 12</option>
+                            <option value="Alumni">Alumni</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter Status</label>
+                        <select id="filterStatus" onchange="filterDashboard()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            <option value="">Semua Status</option>
+                            <option value="AKTIF">Aktif</option>
+                            <option value="ALUMNI">Alumni</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cari Nama</label>
+                        <input type="text" id="searchNama" onkeyup="filterDashboard()" placeholder="Nama santri..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Santri Minus List -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Daftar Santri dengan Saldo Minus</h3>
+                <div id="santriMinusList" class="space-y-3">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Santri Section -->
+        <section id="santri" class="container mx-auto px-4 py-8 hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Data Santri</h2>
+                <p class="text-gray-600">Kelola data santri per kelas</p>
+            </div>
+
+            <!-- Add Santri Form -->
+            <div id="addSantriForm" class="bg-white rounded-xl p-6 card-shadow mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Tambah Santri Baru</h3>
+                <form id="santriForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Santri</label>
+                            <input type="text" id="namaSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
+                            <select id="kelasSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Pilih Kelas</option>
+                                <option value="7">Kelas 7</option>
+                                <option value="8">Kelas 8</option>
+                                <option value="9">Kelas 9</option>
+                                <option value="10">Kelas 10</option>
+                                <option value="11">Kelas 11</option>
+                                <option value="12">Kelas 12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="statusSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                                <option value="AKTIF">Aktif</option>
+                                <option value="ALUMNI">Alumni</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">NIS (Opsional)</label>
+                            <input type="text" id="nisSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Wali (Opsional)</label>
+                            <input type="text" id="namaWali" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full gradient-bg text-white py-2 rounded-lg font-medium hover:shadow-lg transition duration-300">
+                                <i class="fas fa-plus mr-2"></i>Tambah Santri
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Class Tabs -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex flex-wrap gap-2 mb-6 border-b">
+                    <button onclick="showClassTab('7')" class="class-tab-btn active px-4 py-2 text-sm font-medium border-b-2 border-green-500 text-green-600">Kelas 7</button>
+                    <button onclick="showClassTab('8')" class="class-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-green-500">Kelas 8</button>
+                    <button onclick="showClassTab('9')" class="class-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-green-500">Kelas 9</button>
+                    <button onclick="showClassTab('10')" class="class-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-green-500">Kelas 10</button>
+                    <button onclick="showClassTab('11')" class="class-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-green-500">Kelas 11</button>
+                    <button onclick="showClassTab('12')" class="class-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-green-500">Kelas 12</button>
+                    <button onclick="showClassTab('Alumni')" class="class-tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-green-500">Alumni</button>
+                </div>
+
+                <!-- Bulk Promotion Section -->
+                <div id="bulkPromotionSection" class="mb-6 p-4 bg-blue-50 rounded-lg">
+                    <h4 class="text-lg font-semibold text-blue-800 mb-3">Naik Kelas Massal</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="bulkPromotion('7', '8')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                            Naikkan Semua Kelas 7 → 8
+                        </button>
+                        <button onclick="bulkPromotion('8', '9')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                            Naikkan Semua Kelas 8 → 9
+                        </button>
+                        <button onclick="bulkPromotion('9', '10')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                            Naikkan Semua Kelas 9 → 10
+                        </button>
+                        <button onclick="bulkPromotion('9', 'Alumni')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300">
+                            Kelas 9 → Alumni
+                        </button>
+                        <button onclick="bulkPromotion('10', '11')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                            Naikkan Semua Kelas 10 → 11
+                        </button>
+                        <button onclick="bulkPromotion('11', '12')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                            Naikkan Semua Kelas 11 → 12
+                        </button>
+                        <button onclick="bulkPromotion('12', 'Alumni')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300">
+                            Kelas 12 → Alumni
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Class Content -->
+                <div id="classContent">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Transaksi Section -->
+        <section id="transaksi" class="container mx-auto px-4 py-8 hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Transaksi</h2>
+                <p class="text-gray-600">Kelola pemasukan dan penarikan tabungan santri</p>
+            </div>
+
+            <!-- Transaction Form -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Tambah Transaksi</h3>
+                <form id="transaksiForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Santri</label>
+                            <select id="santriSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Pilih Santri</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Transaksi</label>
+                            <select id="jenisTransaksi" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Pilih Jenis</option>
+                                <option value="DEPOSIT">Pemasukan</option>
+                                <option value="WITHDRAW">Penarikan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                            <input type="date" id="tanggalTransaksi" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah (Rp)</label>
+                            <input type="text" id="jumlahTransaksi" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 number-input" placeholder="0" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
+                        <textarea id="keteranganTransaksi" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Wajib diisi - contoh: Uang jajan dari orang tua, Beli makanan di kantin, dll..." required></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="gradient-bg text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition duration-300">
+                            <i class="fas fa-save mr-2"></i>Simpan Transaksi
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Transaksi Terbaru</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 sticky-header">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Santri</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saldo Setelah</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaksiList" class="divide-y divide-gray-200">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Laporan Section -->
+        <section id="laporan" class="container mx-auto px-4 py-8 hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Laporan Bulanan Per Santri</h2>
+                <p class="text-gray-600">Laporan transaksi bulanan per santri</p>
+            </div>
+
+            <!-- Report Filter -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Filter Laporan</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Santri</label>
+                        <select id="laporanSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                            <option value="">Pilih Santri</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bulan & Tahun</label>
+                        <input type="month" id="laporanBulan" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <button onclick="generateReport()" class="flex-1 gradient-bg text-white py-2 rounded-lg font-medium hover:shadow-lg transition duration-300">
+                            <i class="fas fa-search mr-2"></i>Lihat Laporan
+                        </button>
+                        <button onclick="printReport()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button onclick="downloadReportPDF()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Content -->
+            <div id="reportContent" class="bg-white rounded-xl p-6 card-shadow hidden">
+                <div class="print-area" id="printArea">
+                    <!-- Header -->
+                    <div class="text-center mb-8 border-b-2 border-gray-200 pb-6">
+                        <div class="flex items-center justify-center mb-4">
+                            <img id="reportLogo" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/11179e44-d32d-49d5-99e1-eebc382b2272.png" alt="Logo Pondok Pesantren Al-Khoir Palembani dengan kaligrafi islami berwarna hijau dan emas untuk laporan" class="w-16 h-16 mr-4" />
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-800">PONDOK PESANTREN AL-KHOIR PALEMBANI</h1>
+                                <p class="text-lg text-gray-600">معهٰد الخير فا لمبانى</p>
+                                <p class="text-sm text-gray-500">PONDOK PESANTREN AL-KHOIR PALEMBANI</p>
+                                <p class="text-sm text-gray-500">Jl. Soekarno Hatta Lingkar Barat No. 234, Palembang, Sumatera Selatan</p>
+                                <p class="text-sm text-gray-500">Email: alkhoirislamicschool@gmail.com | Instagram: ponpes_alkhoirpalembani</p>
+                                <p class="text-sm text-gray-500">NSPP: 502316710040</p>
+                            </div>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-800">LAPORAN TABUNGAN SANTRI BULANAN</h2>
+                        <div id="reportHeader" class="mt-2 text-gray-600"></div>
+                    </div>
+
+                    <!-- Report Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="border border-gray-300 px-4 py-2 text-left">No</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Tanggal</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Keterangan</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right">Pemasukan</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right">Pengeluaran</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right">Sisa Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTable">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Report Summary -->
+                    <div id="reportSummary" class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pengaturan Section -->
+        <section id="pengaturan" class="container mx-auto px-4 py-8 hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Pengaturan</h2>
+                <p class="text-gray-600">Kelola pengaturan sistem</p>
+            </div>
+
+            <!-- School Info -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Identitas Pondok Pesantren</h3>
+                <form id="schoolInfoForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama (Indonesia)</label>
+                                <input type="text" id="namaIndonesia" value="PONDOK PESANTREN AL KHOIR PALEMBANI" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama (Arab)</label>
+                                <input type="text" id="namaArab" value="معهٰد الخير فا لمبانى" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama (Inggris)</label>
+                                <input type="text" id="namaInggris" value="PONDOK PESANTREN AL-KHOIR PALEMBANI" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                                <textarea id="alamat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" rows="3">Jl. Soekarno Hatta Lingkar Barat No. 234, Palembang, Sumatera Selatan</textarea>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" id="email" value="alkhoirislamicschool@gmail.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
+                                <input type="text" id="instagram" value="ponpes_alkhoirpalembani" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">NSPP</label>
+                                <input type="text" id="nspp" value="502316710040" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                                <input type="file" id="logoUpload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <p class="text-xs text-gray-500 mt-1">Upload logo pondok pesantren (akan tampil di header, dashboard, nota, dan laporan)</p>
+                                <div id="logoPreview" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" class="gradient-bg text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition duration-300">
+                            <i class="fas fa-save mr-2"></i>Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- User Management -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Manajemen Pengguna</h3>
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-700 mb-3">Tambah Pengguna Baru</h4>
+                    <form id="userForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                <input type="text" id="newUsername" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                <input type="password" id="newPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                                <select id="newUserRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                                    <option value="">Pilih Role</option>
+                                    <option value="ADMIN">Admin</option>
+                                    <option value="OPERATOR">Operator</option>
+                                    <option value="SANTRI">Santri/Orang Tua</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" class="w-full gradient-bg text-white py-2 rounded-lg font-medium hover:shadow-lg transition duration-300">
+                                    <i class="fas fa-user-plus mr-2"></i>Tambah
+                                </button>
+                            </div>
+                        </div>
+                        <div id="santriSelectForUser" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Link ke Santri (untuk role Santri/Orang Tua)</label>
+                            <select id="linkedSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <option value="">Pilih Santri</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium text-gray-700 mb-3">Daftar Pengguna</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Linked Santri</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userList" class="divide-y divide-gray-200">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 modal">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="text-center">
+                <div class="mb-4">
+                    <img id="receiptLogo" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/8f516462-ed54-4b60-bedd-1b572470ed77.png" alt="Logo Pondok Pesantren Al-Khoir Palembani dengan kaligrafi islami berwarna hijau dan emas untuk nota" class="w-12 h-12 mx-auto mb-2" />
+                    <h3 class="text-lg font-semibold">PONDOK PESANTREN AL-KHOIR PALEMBANI</h3>
+                    <p class="text-sm text-gray-600">Nota Pemasukan Tabungan</p>
+                </div>
+                <div id="receiptContent" class="text-left space-y-2 mb-6 print-area">
+                    <!-- Dynamic content -->
+                </div>
+                <div class="flex space-x-3 no-print">
+                    <button onclick="printReceipt()" class="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                        <i class="fas fa-print mr-2"></i>Cetak
+                    </button>
+                    <button onclick="downloadReceiptPDF()" class="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-300">
+                        <i class="fas fa-file-pdf mr-2"></i>PDF
+                    </button>
+                    <button onclick="closeReceipt()" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition duration-300">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Santri Modal -->
+    <div id="editSantriModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 modal">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Edit Santri</h3>
+            <form id="editSantriForm" class="space-y-4">
+                <input type="hidden" id="editSantriId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Santri</label>
+                    <input type="text" id="editNamaSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
+                    <select id="editKelasSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                        <option value="7">Kelas 7</option>
+                        <option value="8">Kelas 8</option>
+                        <option value="9">Kelas 9</option>
+                        <option value="10">Kelas 10</option>
+                        <option value="11">Kelas 11</option>
+                        <option value="12">Kelas 12</option>
+                        <option value="Alumni">Alumni</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="editStatusSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+                        <option value="AKTIF">Aktif</option>
+                        <option value="ALUMNI">Alumni</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">NIS</label>
+                    <input type="text" id="editNisSantri" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Wali</label>
+                    <input type="text" id="editNamaWali" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 gradient-bg text-white py-2 rounded-lg hover:shadow-lg transition duration-300">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                    <button type="button" onclick="closeEditSantriModal()" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition duration-300">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Detail Santri Modal -->
+    <div id="detailSantriModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 modal">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Detail Santri</h3>
+                <button onclick="closeDetailSantriModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="detailSantriContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let currentUser = null;
+        let currentUserRole = null;
+        let studentsData = [];
+        let transactionsData = [];
+        let usersData = [];
+        let schoolSettings = {
+            namaIndonesia: 'PONDOK PESANTREN AL KHOIR PALEMBANI',
+            namaArab: 'معهٰد الخير فا لمبانى',
+            namaInggris: 'PONDOK PESANTREN AL-KHOIR PALEMBANI',
+            alamat: 'Jl. Soekarno Hatta Lingkar Barat No. 234, Palembang, Sumatera Selatan',
+            email: 'alkhoirislamicschool@gmail.com',
+            instagram: 'ponpes_alkhoirpalembani',
+            nspp: '502316710040',
+            logo: null
+        };
+        let currentReceiptData = null;
+        let currentReportData = null;
+
+        // Initialize Demo Data
+        function initializeDemoData() {
+            if (localStorage.getItem('tabunganSantriData')) {
+                const data = JSON.parse(localStorage.getItem('tabunganSantriData'));
+                studentsData = data.students || [];
+                transactionsData = data.transactions || [];
+                usersData = data.users || [];
+                schoolSettings = { ...schoolSettings, ...data.settings };
+            } else {
+                // Demo Students
+                studentsData = [
+                    { id: 1, name: 'Ahmad Fauzi', classLevel: '7', status: 'AKTIF', balance: 75000, nis: '2024001', guardianName: 'Bapak Fauzi', userId: 2 },
+                    { id: 2, name: 'Fatimah Zahra', classLevel: '7', status: 'AKTIF', balance: 50000, nis: '2024002', guardianName: 'Ibu Zahra' },
+                    { id: 3, name: 'Muhammad Rizki', classLevel: '8', status: 'AKTIF', balance: -15000, nis: '2024003', guardianName: 'Bapak Rizki' },
+                    { id: 4, name: 'Aisyah Putri', classLevel: '8', status: 'AKTIF', balance: 100000, nis: '2024004', guardianName: 'Ibu Putri' },
+                    { id: 5, name: 'Abdul Rahman', classLevel: '9', status: 'AKTIF', balance: 25000, nis: '2024005', guardianName: 'Bapak Rahman' },
+                    { id: 6, name: 'Khadijah Sari', classLevel: '10', status: 'AKTIF', balance: 80000, nis: '2024006', guardianName: 'Ibu Sari' },
+                    { id: 7, name: 'Umar Faruq', classLevel: '11', status: 'AKTIF', balance: -5000, nis: '2024007', guardianName: 'Bapak Faruq' },
+                    { id: 8, name: 'Zainab Kubra', classLevel: '12', status: 'AKTIF', balance: 120000, nis: '2024008', guardianName: 'Ibu Kubra' },
+                    { id: 9, name: 'Ali Akbar', classLevel: 'Alumni', status: 'ALUMNI', balance: 200000, nis: '2023001', guardianName: 'Bapak Akbar' },
+                    { id: 10, name: 'Siti Aminah', classLevel: 'Alumni', status: 'ALUMNI', balance: -10000, nis: '2023002', guardianName: 'Ibu Aminah' }
+                ];
+
+                // Demo Users
+                usersData = [
+                    { id: 1, username: 'admin', password: 'admin123', role: 'ADMIN', linkedStudentId: null },
+                    { id: 2, username: 'ahmad', password: 'santri123', role: 'SANTRI', linkedStudentId: 1 },
+                    { id: 3, username: 'operator1', password: 'operator123', role: 'OPERATOR', linkedStudentId: null }
+                ];
+
+                // Demo Transactions
+                transactionsData = [
+                    { id: 1, studentId: 1, date: '2024-01-15', description: 'Setoran bulanan dari orang tua', type: 'DEPOSIT', amount: 50000, balanceAfter: 50000, receiptNumber: 'AL-KHOIR/RCPT/202401/00001' },
+                    { id: 2, studentId: 1, date: '2024-01-20', description: 'Beli makanan di kantin', type: 'WITHDRAW', amount: 25000, balanceAfter: 25000 },
+                    { id: 3, studentId: 1, date: '2024-01-25', description: 'Tambahan uang jajan', type: 'DEPOSIT', amount: 50000, balanceAfter: 75000, receiptNumber: 'AL-KHOIR/RCPT/202401/00002' },
+                    { id: 4, studentId: 3, date: '2024-01-18', description: 'Uang saku awal', type: 'DEPOSIT', amount: 30000, balanceAfter: 30000, receiptNumber: 'AL-KHOIR/RCPT/202401/00003' },
+                    { id: 5, studentId: 3, date: '2024-01-22', description: 'Beli buku dan alat tulis', type: 'WITHDRAW', amount: 45000, balanceAfter: -15000 }
+                ];
+
+                saveAllData();
+            }
+        }
+
+        // Utility Functions
+        function formatIDR(amount) {
+            return new Intl.NumberFormat('id-ID').format(amount);
+        }
+
+        function formatCurrency(amount) {
+            return 'Rp ' + formatIDR(amount);
+        }
+
+        function parseIDR(str) {
+            return parseInt(str.replace(/\D/g, '')) || 0;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return new Intl.DateTimeFormat('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                timeZone: 'Asia/Jakarta'
+            }).format(date);
+        }
+
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr);
+            return new Intl.DateTimeFormat('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Asia/Jakarta'
+            }).format(date);
+        }
+
+        function generateReceiptNumber() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const deposits = transactionsData.filter(t => t.type === 'DEPOSIT' && t.receiptNumber).length;
+            const sequence = String(deposits + 1).padStart(5, '0');
+            return `AL-KHOIR/RCPT/${year}${month}/${sequence}`;
+        }
+
+        function saveAllData() {
+            const data = {
+                students: studentsData,
+                transactions: transactionsData,
+                users: usersData,
+                settings: schoolSettings
+            };
+            localStorage.setItem('tabunganSantriData', JSON.stringify(data));
+        }
+
+        function generateId(array) {
+            return array.length > 0 ? Math.max(...array.map(item => item.id)) + 1 : 1;
+        }
+
+        // Real-time Clock
+        function updateClock() {
+            const now = new Date();
+            const options = {
+                timeZone: 'Asia/Jakarta',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+
+            const formatter = new Intl.DateTimeFormat('id-ID', options);
+            const parts = formatter.formatToParts(now);
+            
+            const weekday = parts.find(part => part.type === 'weekday').value;
+            const day = parts.find(part => part.type === 'day').value;
+            const month = parts.find(part => part.type === 'month').value;
+            const year = parts.find(part => part.type === 'year').value;
+            const hour = parts.find(part => part.type === 'hour').value;
+            const minute = parts.find(part => part.type === 'minute').value;
+            const second = parts.find(part => part.type === 'second').value;
+
+            document.getElementById('realTimeDate').textContent = `${weekday}, ${day} ${month} ${year}`;
+            document.getElementById('realTimeClock').textContent = `${hour}:${minute}:${second}`;
+        }
+
+        // Input Masking
+        function setupInputMasking() {
+            const moneyInputs = document.querySelectorAll('.number-input');
+            moneyInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const value = this.value.replace(/\D/g, '');
+                    this.value = formatIDR(value);
+                });
+            });
+        }
+
+        // Authentication
+        function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const user = usersData.find(u => u.username === username && u.password === password);
+
+            if (user) {
+                currentUser = user;
+                currentUserRole = user.role;
+                
+                document.getElementById('currentUser').textContent = user.username;
+                document.getElementById('currentRole').textContent = `(${user.role})`;
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+
+                // Adjust UI based on role
+                if (user.role === 'SANTRI') {
+                    adjustUIForSantriRole(user.linkedStudentId);
+                }
+
+                updateDashboard();
+                loadAllData();
+                startClock();
+            } else {
+                alert('Username atau password salah!');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            currentUserRole = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        function adjustUIForSantriRole(studentId) {
+            // Hide admin-only sections
+            const adminOnlyElements = [
+                document.getElementById('addSantriForm'),
+                document.getElementById('bulkPromotionSection'),
+                document.querySelector('[onclick="showSection(\'pengaturan\')"]').parentElement
+            ];
+
+            adminOnlyElements.forEach(el => {
+                if (el) el.style.display = 'none';
+            });
+
+            // Filter data to show only linked student
+            studentsData = studentsData.filter(s => s.id === studentId);
+            transactionsData = transactionsData.filter(t => t.studentId === studentId);
+        }
+
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Show selected section
+            document.getElementById(sectionName).classList.remove('hidden');
+
+            // Update navigation
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-green-500', 'text-green-600');
+                btn.classList.add('border-transparent');
+            });
+
+            event.target.classList.add('active', 'border-green-500', 'text-green-600');
+            event.target.classList.remove('border-transparent');
+
+            // Load section-specific data
+            switch(sectionName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'santri':
+                    loadSantriData();
+                    showClassTab('7');
+                    break;
+                case 'transaksi':
+                    loadTransaksiData();
+                    populateSelects();
+                    break;
+                case 'laporan':
+                    populateLaporanSelect();
+                    break;
+                case 'pengaturan':
+                    loadUserList();
+                    loadSchoolSettings();
+                    break;
+            }
+        }
+
+        // Dashboard Functions
+        function updateDashboard() {
+            const totalDeposit = transactionsData
+                .filter(t => t.type === 'DEPOSIT')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalWithdraw = transactionsData
+                .filter(t => t.type === 'WITHDRAW')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalBalance = studentsData.reduce((sum, s) => sum + s.balance, 0);
+            
+            const negativeStudents = studentsData.filter(s => s.balance < 0);
+            const totalMinus = Math.abs(negativeStudents.reduce((sum, s) => sum + Math.min(0, s.balance), 0));
+
+            document.getElementById('totalPemasukan').textContent = formatCurrency(totalDeposit);
+            document.getElementById('totalPenarikan').textContent = formatCurrency(totalWithdraw);
+            document.getElementById('totalKeseluruhan').textContent = formatCurrency(totalBalance);
+            document.getElementById('totalMinusSantri').textContent = formatCurrency(totalMinus);
+
+            // Update minus students list
+            const minusList = document.getElementById('santriMinusList');
+            if (negativeStudents.length === 0) {
+                minusList.innerHTML = '<p class="text-gray-500 italic">Tidak ada santri dengan saldo minus</p>';
+            } else {
+                minusList.innerHTML = negativeStudents.map(student => `
+                    <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div>
+                            <span class="font-medium text-gray-800">${student.name}</span>
+                            <span class="text-sm text-gray-600 ml-2">Kelas ${student.classLevel}</span>
+                        </div>
+                        <span class="font-semibold text-red-600">${formatCurrency(student.balance)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function filterDashboard() {
+            const kelasFilter = document.getElementById('filterKelas').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+            const namaFilter = document.getElementById('searchNama').value.toLowerCase();
+
+            let filteredStudents = studentsData;
+
+            if (kelasFilter) {
+                filteredStudents = filteredStudents.filter(s => s.classLevel === kelasFilter);
+            }
+
+            if (statusFilter) {
+                filteredStudents = filteredStudents.filter(s => s.status === statusFilter);
+            }
+
+            if (namaFilter) {
+                filteredStudents = filteredStudents.filter(s => s.name.toLowerCase().includes(namaFilter));
+            }
+
+            // Update minus list with filtered data
+            const negativeStudents = filteredStudents.filter(s => s.balance < 0);
+            const minusList = document.getElementById('santriMinusList');
+            
+            if (negativeStudents.length === 0) {
+                minusList.innerHTML = '<p class="text-gray-500 italic">Tidak ada santri dengan saldo minus pada filter ini</p>';
+            } else {
+                minusList.innerHTML = negativeStudents.map(student => `
+                    <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div>
+                            <span class="font-medium text-gray-800">${student.name}</span>
+                            <span class="text-sm text-gray-600 ml-2">Kelas ${student.classLevel}</span>
+                        </div>
+                        <span class="font-semibold text-red-600">${formatCurrency(student.balance)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Quick Search
+        function setupQuickSearch() {
+            const searchInput = document.getElementById('quickSearch');
+            const resultsDiv = document.getElementById('quickSearchResults');
+
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                
+                if (term.length < 2) {
+                    resultsDiv.classList.add('hidden');
+                    return;
+                }
+
+                const results = studentsData.filter(s => 
+                    s.name.toLowerCase().includes(term)
+                ).slice(0, 5);
+
+                if (results.length > 0) {
+                    resultsDiv.innerHTML = results.map(student => `
+                        <div class="p-3 hover:bg-gray-100 cursor-pointer border-b" onclick="showStudentBalance(${student.id})">
+                            <div class="font-medium text-gray-800">${student.name}</div>
+                            <div class="text-sm text-gray-600">Kelas ${student.classLevel} - ${formatCurrency(student.balance)}</div>
+                        </div>
+                    `).join('');
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    resultsDiv.innerHTML = '<div class="p-3 text-gray-500">Tidak ada hasil</div>';
+                    resultsDiv.classList.remove('hidden');
+                }
+            });
+
+            // Hide results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+                    resultsDiv.classList.add('hidden');
+                }
+            });
+        }
+
+        function showStudentBalance(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (student) {
+                alert(`Saldo ${student.name}: ${formatCurrency(student.balance)}`);
+                document.getElementById('quickSearchResults').classList.add('hidden');
+                document.getElementById('quickSearch').value = '';
+            }
+        }
+
+        // Students Management
+        function addStudent(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('namaSantri').value;
+            const classLevel = document.getElementById('kelasSantri').value;
+            const status = document.getElementById('statusSantri').value;
+            const nis = document.getElementById('nisSantri').value;
+            const guardianName = document.getElementById('namaWali').value;
+
+            const newStudent = {
+                id: generateId(studentsData),
+                name: name,
+                classLevel: classLevel,
+                status: status,
+                balance: 0,
+                nis: nis || null,
+                guardianName: guardianName || null,
+                userId: null
+            };
+
+            studentsData.push(newStudent);
+            saveAllData();
+            
+            document.getElementById('santriForm').reset();
+            loadSantriData();
+            showClassTab(classLevel);
+            
+            alert('Santri berhasil ditambahkan!');
+        }
+
+        function loadSantriData() {
+            populateSelects();
+            loadLinkedSantriOptions();
+        }
+
+        function showClassTab(classLevel) {
+            // Update tab buttons
+            document.querySelectorAll('.class-tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-green-500', 'text-green-600');
+                btn.classList.add('border-transparent');
+            });
+            
+            event.target.classList.add('active', 'border-green-500', 'text-green-600');
+            event.target.classList.remove('border-transparent');
+
+            // Filter students by class
+            const classStudents = studentsData.filter(s => s.classLevel === classLevel);
+            
+            const content = document.getElementById('classContent');
+            
+            if (classStudents.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">Belum ada santri di kelas ${classLevel}</p>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 sticky-header">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saldo</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${classStudents.map(student => `
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm text-gray-900">${student.name}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-900">${student.classLevel}</td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                                                student.status === 'AKTIF' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                            }">
+                                                ${student.status}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-semibold ${student.balance < 0 ? 'balance-negative' : 'balance-positive'}">
+                                            ${formatCurrency(student.balance)}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <div class="flex space-x-2">
+                                                <button onclick="showStudentDetail(${student.id})" class="text-blue-600 hover:text-blue-800" title="Detail">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                ${currentUserRole !== 'SANTRI' ? `
+                                                    <button onclick="editStudent(${student.id})" class="text-green-600 hover:text-green-800" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button onclick="promoteStudent(${student.id})" class="text-yellow-600 hover:text-yellow-800" title="Naik Kelas">
+                                                        <i class="fas fa-level-up-alt"></i>
+                                                    </button>
+                                                    <button onclick="deleteStudent(${student.id})" class="text-red-600 hover:text-red-800" title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        function editStudent(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (student) {
+                document.getElementById('editSantriId').value = student.id;
+                document.getElementById('editNamaSantri').value = student.name;
+                document.getElementById('editKelasSantri').value = student.classLevel;
+                document.getElementById('editStatusSantri').value = student.status;
+                document.getElementById('editNisSantri').value = student.nis || '';
+                document.getElementById('editNamaWali').value = student.guardianName || '';
+                
+                document.getElementById('editSantriModal').classList.remove('hidden');
+                document.getElementById('editSantriModal').classList.add('flex');
+            }
+        }
+
+        function saveEditStudent(event) {
+            event.preventDefault();
+            
+            const id = parseInt(document.getElementById('editSantriId').value);
+            const name = document.getElementById('editNamaSantri').value;
+            const classLevel = document.getElementById('editKelasSantri').value;
+            const status = document.getElementById('editStatusSantri').value;
+            const nis = document.getElementById('editNisSantri').value;
+            const guardianName = document.getElementById('editNamaWali').value;
+
+            const studentIndex = studentsData.findIndex(s => s.id === id);
+            if (studentIndex !== -1) {
+                studentsData[studentIndex] = {
+                    ...studentsData[studentIndex],
+                    name: name,
+                    classLevel: classLevel,
+                    status: status,
+                    nis: nis || null,
+                    guardianName: guardianName || null
+                };
+
+                saveAllData();
+                closeEditSantriModal();
+                loadSantriData();
+                showClassTab(classLevel);
+                updateDashboard();
+                
+                alert('Data santri berhasil diupdate!');
+            }
+        }
+
+        function closeEditSantriModal() {
+            document.getElementById('editSantriModal').classList.add('hidden');
+            document.getElementById('editSantriModal').classList.remove('flex');
+        }
+
+        function promoteStudent(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) return;
+
+            let newClass = student.classLevel;
+            let message = '';
+
+            if (student.classLevel === '12') {
+                if (confirm(`Apakah Anda yakin ingin menaikkan ${student.name} dari Kelas 12 ke Alumni?`)) {
+                    newClass = 'Alumni';
+                    student.status = 'ALUMNI';
+                    message = 'menjadi Alumni';
+                } else {
+                    return;
+                }
+            } else if (student.classLevel === '9') {
+                const choice = confirm(`Pilih OK untuk naik ke Kelas 10, atau Cancel untuk langsung ke Alumni`);
+                if (choice) {
+                    newClass = '10';
+                    message = 'ke Kelas 10';
+                } else if (confirm(`Apakah Anda yakin ingin menaikkan ${student.name} dari Kelas 9 langsung ke Alumni?`)) {
+                    newClass = 'Alumni';
+                    student.status = 'ALUMNI';
+                    message = 'menjadi Alumni';
+                } else {
+                    return;
+                }
+            } else if (student.classLevel !== 'Alumni') {
+                const nextClass = (parseInt(student.classLevel) + 1).toString();
+                if (confirm(`Apakah Anda yakin ingin menaikkan ${student.name} dari Kelas ${student.classLevel} ke Kelas ${nextClass}?`)) {
+                    newClass = nextClass;
+                    message = `ke Kelas ${nextClass}`;
+                } else {
+                    return;
+                }
+            } else {
+                alert('Santri sudah menjadi Alumni');
+                return;
+            }
+
+            student.classLevel = newClass;
+            saveAllData();
+            loadSantriData();
+            showClassTab(newClass);
+            updateDashboard();
+            
+            alert(`${student.name} berhasil naik ${message}!`);
+        }
+
+        function bulkPromotion(fromClass, toClass) {
+            const studentsToPromote = studentsData.filter(s => s.classLevel === fromClass);
+            
+            if (studentsToPromote.length === 0) {
+                alert(`Tidak ada santri di kelas ${fromClass}`);
+                return;
+            }
+
+            const message = toClass === 'Alumni' 
+                ? `Apakah Anda yakin ingin menaikkan semua santri Kelas ${fromClass} menjadi Alumni? (${studentsToPromote.length} santri)`
+                : `Apakah Anda yakin ingin menaikkan semua santri Kelas ${fromClass} ke Kelas ${toClass}? (${studentsToPromote.length} santri)`;
+
+            if (confirm(message)) {
+                studentsToPromote.forEach(student => {
+                    student.classLevel = toClass;
+                    if (toClass === 'Alumni') {
+                        student.status = 'ALUMNI';
+                    }
+                });
+
+                saveAllData();
+                loadSantriData();
+                showClassTab(toClass);
+                updateDashboard();
+                
+                const resultMessage = toClass === 'Alumni' 
+                    ? `${studentsToPromote.length} santri berhasil dinaikkan menjadi Alumni!`
+                    : `${studentsToPromote.length} santri berhasil dinaikkan ke Kelas ${toClass}!`;
+                
+                alert(resultMessage);
+            }
+        }
+
+        function deleteStudent(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) return;
+
+            const relatedTransactions = transactionsData.filter(t => t.studentId === studentId);
+            let message = `Apakah Anda yakin ingin menghapus santri "${student.name}"?`;
+            
+            if (relatedTransactions.length > 0) {
+                message += `\n\nPeringatan: ${relatedTransactions.length} transaksi terkait akan ikut terhapus!`;
+            }
+
+            if (confirm(message)) {
+                // Remove student
+                studentsData = studentsData.filter(s => s.id !== studentId);
+                
+                // Remove related transactions
+                transactionsData = transactionsData.filter(t => t.studentId !== studentId);
+                
+                // Remove related user if any
+                usersData = usersData.filter(u => u.linkedStudentId !== studentId);
+
+                saveAllData();
+                loadSantriData();
+                showClassTab(student.classLevel);
+                updateDashboard();
+                
+                alert('Santri dan data terkait berhasil dihapus!');
+            }
+        }
+
+        function showStudentDetail(studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) return;
+
+            const studentTransactions = transactionsData
+                .filter(t => t.studentId === studentId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const content = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-3">Informasi Santri</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>Nama:</strong> ${student.name}</div>
+                            <div><strong>Kelas:</strong> ${student.classLevel}</div>
+                            <div><strong>Status:</strong> ${student.status}</div>
+                            <div><strong>NIS:</strong> ${student.nis || '-'}</div>
+                            <div><strong>Nama Wali:</strong> ${student.guardianName || '-'}</div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-3">Informasi Saldo</h4>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold ${student.balance < 0 ? 'balance-negative' : 'balance-positive'} mb-2">
+                                ${formatCurrency(student.balance)}
+                            </div>
+                            <div class="text-sm text-gray-600">Saldo Saat Ini</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="font-semibold text-gray-800 mb-3">Riwayat Transaksi</h4>
+                ${studentTransactions.length === 0 ? 
+                    '<p class="text-gray-500 italic">Belum ada transaksi</p>' :
+                    `<div class="overflow-x-auto max-h-96">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 sticky-header">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saldo Setelah</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${studentTransactions.map(t => `
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm text-gray-900">${formatDate(t.date)}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-900">${t.description}</td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                                                t.type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                            }">
+                                                ${t.type === 'DEPOSIT' ? 'Pemasukan' : 'Penarikan'}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-900">${formatCurrency(t.amount)}</td>
+                                        <td class="px-4 py-3 text-sm font-semibold ${t.balanceAfter < 0 ? 'balance-negative' : 'balance-positive'}">
+                                            ${formatCurrency(t.balanceAfter)}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>`
+                }
+            `;
+
+            document.getElementById('detailSantriContent').innerHTML = content;
+            document.getElementById('detailSantriModal').classList.remove('hidden');
+            document.getElementById('detailSantriModal').classList.add('flex');
+        }
+
+        function closeDetailSantriModal() {
+            document.getElementById('detailSantriModal').classList.add('hidden');
+            document.getElementById('detailSantriModal').classList.remove('flex');
+        }
+
+        // Transaction Management
+        function addTransaction(event) {
+            event.preventDefault();
+            
+            const studentId = parseInt(document.getElementById('santriSelect').value);
+            const type = document.getElementById('jenisTransaksi').value;
+            const amount = parseIDR(document.getElementById('jumlahTransaksi').value);
+            const date = document.getElementById('tanggalTransaksi').value;
+            const description = document.getElementById('keteranganTransaksi').value.trim();
+
+            if (!studentId || !type || !amount || !date || !description) {
+                alert('Mohon lengkapi semua field! Keterangan wajib diisi.');
+                return;
+            }
+
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) {
+                alert('Santri tidak ditemukan!');
+                return;
+            }
+
+            // Calculate new balance
+            const newBalance = type === 'DEPOSIT' 
+                ? student.balance + amount 
+                : student.balance - amount;
+
+            // Create transaction
+            const transaction = {
+                id: generateId(transactionsData),
+                studentId: studentId,
+                date: date,
+                description: description,
+                type: type,
+                amount: amount,
+                balanceAfter: newBalance
+            };
+
+            // Add receipt number for deposits
+            if (type === 'DEPOSIT') {
+                transaction.receiptNumber = generateReceiptNumber();
+            }
+
+            // Update student balance
+            student.balance = newBalance;
+
+            // Save data
+            transactionsData.push(transaction);
+            saveAllData();
+
+            // Reset form
+            document.getElementById('transaksiForm').reset();
+            document.getElementById('tanggalTransaksi').value = new Date().toISOString().split('T')[0];
+
+            // Refresh displays
+            loadTransaksiData();
+            updateDashboard();
+            
+            // Show receipt for deposits
+            if (type === 'DEPOSIT') {
+                showReceipt(transaction, student);
+            }
+
+            alert('Transaksi berhasil disimpan!');
+        }
+
+        function loadTransaksiData() {
+            const recentTransactions = transactionsData
+                .slice(-20)
+                .reverse();
+
+            const tbody = document.getElementById('transaksiList');
+            tbody.innerHTML = recentTransactions.map(transaction => {
+                const student = studentsData.find(s => s.id === transaction.studentId);
+                const date = formatDate(transaction.date);
+
+                return `
+                    <tr>
+                        <td class="px-4 py-3 text-sm text-gray-900">${date}</td>
+                        <td class="px-4 py-3 text-sm text-gray-900">${student ? student.name : 'Unknown'}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                                transaction.type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }">
+                                ${transaction.type === 'DEPOSIT' ? 'Pemasukan' : 'Penarikan'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-900">${transaction.description}</td>
+                        <td class="px-4 py-3 text-sm text-gray-900">${formatCurrency(transaction.amount)}</td>
+                        <td class="px-4 py-3 text-sm font-semibold ${transaction.balanceAfter < 0 ? 'balance-negative' : 'balance-positive'}">
+                            ${formatCurrency(transaction.balanceAfter)}
+                        </td>
+                        <td class="px-4 py-3 text-sm">
+                            ${transaction.type === 'DEPOSIT' && transaction.receiptNumber ? 
+                                `<button onclick="showReceiptFromList(${transaction.id})" class="text-blue-600 hover:text-blue-800" title="Lihat Nota">
+                                    <i class="fas fa-receipt"></i>
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function populateSelects() {
+            const santriSelect = document.getElementById('santriSelect');
+            const laporanSantri = document.getElementById('laporanSantri');
+            
+            const options = studentsData.map(student => 
+                `<option value="${student.id}">${student.name} (Kelas ${student.classLevel}) - ${formatCurrency(student.balance)}</option>`
+            ).join('');
+            
+            santriSelect.innerHTML = '<option value="">Pilih Santri</option>' + options;
+            if (laporanSantri) {
+                laporanSantri.innerHTML = '<option value="">Pilih Santri</option>' + options;
+            }
+        }
+
+        // Receipt Functions
+        function showReceiptFromList(transactionId) {
+            const transaction = transactionsData.find(t => t.id === transactionId);
+            const student = studentsData.find(s => s.id === transaction.studentId);
+            if (transaction && student) {
+                showReceipt(transaction, student);
+            }
+        }
+
+        function showReceipt(transaction, student) {
+            const dateTime = formatDateTime(transaction.date);
+            
+            const content = `
+                <div class="border-b pb-3 mb-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">No. Nota:</span>
+                        <span class="font-medium">${transaction.receiptNumber}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Tanggal & Jam:</span>
+                        <span class="font-medium">${dateTime}</span>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Nama Santri:</span>
+                        <span class="font-medium">${student.name}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Kelas:</span>
+                        <span class="font-medium">${student.classLevel}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Status:</span>
+                        <span class="font-medium">${student.status}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Keterangan:</span>
+                        <span class="font-medium">${transaction.description}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Jumlah Setor:</span>
+                        <span class="font-bold text-green-600">${formatCurrency(transaction.amount)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Saldo Setelah:</span>
+                        <span class="font-bold ${transaction.balanceAfter < 0 ? 'balance-negative' : 'balance-positive'}">${formatCurrency(transaction.balanceAfter)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Petugas:</span>
+                        <span class="font-medium">${currentUser.username}</span>
+                    </div>
+                </div>
+            `;
+
+            currentReceiptData = { transaction, student };
+            document.getElementById('receiptContent').innerHTML = content;
+            document.getElementById('receiptModal').classList.remove('hidden');
+            document.getElementById('receiptModal').classList.add('flex');
+        }
+
+        function closeReceipt() {
+            document.getElementById('receiptModal').classList.add('hidden');
+            document.getElementById('receiptModal').classList.remove('flex');
+            currentReceiptData = null;
+        }
+
+        function printReceipt() {
+            window.print();
+        }
+
+        function downloadReceiptPDF() {
+            if (!currentReceiptData) return;
+
+            const { transaction, student } = currentReceiptData;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Add logo if available
+            if (schoolSettings.logo) {
+                doc.addImage(schoolSettings.logo, 'JPEG', 20, 20, 30, 30);
+            }
+
+            // Header
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text(schoolSettings.namaIndonesia, 105, 25, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(schoolSettings.namaArab, 105, 35, { align: 'center' });
+            doc.text(schoolSettings.namaInggris, 105, 45, { align: 'center' });
+            doc.text(schoolSettings.alamat, 105, 55, { align: 'center' });
+            doc.text(`Email: ${schoolSettings.email} | Instagram: ${schoolSettings.instagram}`, 105, 65, { align: 'center' });
+            doc.text(`NSPP: ${schoolSettings.nspp}`, 105, 75, { align: 'center' });
+
+            doc.line(20, 85, 190, 85);
+
+            // Title
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('NOTA PEMASUKAN TABUNGAN', 105, 95, { align: 'center' });
+
+            // Receipt details
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            const dateTime = formatDateTime(transaction.date);
+
+            doc.text(`No. Nota: ${transaction.receiptNumber}`, 30, 115);
+            doc.text(`Tanggal & Jam: ${dateTime}`, 30, 125);
+            doc.text(`Nama Santri: ${student.name}`, 30, 135);
+            doc.text(`Kelas: ${student.classLevel}`, 30, 145);
+            doc.text(`Status: ${student.status}`, 30, 155);
+            doc.text(`Keterangan: ${transaction.description}`, 30, 165);
+            doc.text(`Jumlah Setor: ${formatCurrency(transaction.amount)}`, 30, 175);
+            doc.text(`Saldo Setelah: ${formatCurrency(transaction.balanceAfter)}`, 30, 185);
+            doc.text(`Petugas: ${currentUser.username}`, 30, 195);
+
+            // Footer
+            doc.line(20, 205, 190, 205);
+            doc.setFontSize(9);
+            doc.text('Hormat kami,', 30, 220);
+            doc.text('Pengelola Tabungan Santri', 30, 240);
+            doc.text(schoolSettings.namaIndonesia, 30, 250);
+
+            doc.save(`Nota-${transaction.receiptNumber}.pdf`);
+        }
+
+        // Report Functions
+        function populateLaporanSelect() {
+            populateSelects();
+            
+            // Set default month to current month
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('laporanBulan').value = currentMonth;
+        }
+
+        function generateReport() {
+            const studentId = parseInt(document.getElementById('laporanSantri').value);
+            const month = document.getElementById('laporanBulan').value;
+
+            if (!studentId || !month) {
+                alert('Mohon pilih santri dan bulan!');
+                return;
+            }
+
+            const student = studentsData.find(s => s.id === studentId);
+            const [year, monthNum] = month.split('-');
+
+            // Filter transactions for the selected month
+            const monthTransactions = transactionsData
+                .filter(t => {
+                    const tDate = new Date(t.date);
+                    return t.studentId === studentId && 
+                           tDate.getFullYear() == year && 
+                           (tDate.getMonth() + 1) == monthNum;
+                })
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Calculate starting balance for the month
+            let startBalance = student.balance;
+            const laterTransactions = transactionsData.filter(t => {
+                const tDate = new Date(t.date);
+                return t.studentId === studentId && 
+                       ((tDate.getFullYear() > year) || 
+                        (tDate.getFullYear() == year && tDate.getMonth() + 1 > monthNum));
+            });
+
+            laterTransactions.forEach(t => {
+                if (t.type === 'DEPOSIT') {
+                    startBalance -= t.amount;
+                } else {
+                    startBalance += t.amount;
+                }
+            });
+
+            // Calculate running balance for each transaction
+            let runningBalance = startBalance;
+            const reportData = [];
+
+            monthTransactions.forEach(t => {
+                if (t.type === 'DEPOSIT') {
+                    runningBalance += t.amount;
+                } else {
+                    runningBalance -= t.amount;
+                }
+
+                reportData.push({
+                    date: formatDate(t.date),
+                    description: t.description,
+                    pemasukan: t.type === 'DEPOSIT' ? t.amount : 0,
+                    pengeluaran: t.type === 'WITHDRAW' ? t.amount : 0,
+                    balance: runningBalance
+                });
+            });
+
+            // Update report header
+            const monthNames = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+
+            document.getElementById('reportHeader').innerHTML = `
+                <p><strong>Nama:</strong> ${student.name} | <strong>Kelas:</strong> ${student.classLevel} | <strong>Status:</strong> ${student.status}</p>
+                <p><strong>Periode:</strong> ${monthNames[monthNum - 1]} ${year}</p>
+            `;
+
+            // Generate report table
+            const tbody = document.getElementById('reportTable');
+            tbody.innerHTML = reportData.map((row, index) => `
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2">${index + 1}</td>
+                    <td class="border border-gray-300 px-4 py-2">${row.date}</td>
+                    <td class="border border-gray-300 px-4 py-2">${row.description}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">${row.pemasukan ? formatCurrency(row.pemasukan) : '-'}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">${row.pengeluaran ? formatCurrency(row.pengeluaran) : '-'}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-right ${row.balance < 0 ? 'balance-negative' : 'balance-positive'}">${formatCurrency(row.balance)}</td>
+                </tr>
+            `).join('');
+
+            // Calculate summary
+            const totalPemasukan = reportData.reduce((sum, row) => sum + row.pemasukan, 0);
+            const totalPengeluaran = reportData.reduce((sum, row) => sum + row.pengeluaran, 0);
+            const saldoAkhir = student.balance;
+
+            document.getElementById('reportSummary').innerHTML = `
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h4 class="font-semibold text-green-800">Total Pemasukan Bulan Ini</h4>
+                    <p class="text-2xl font-bold text-green-600">${formatCurrency(totalPemasukan)}</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <h4 class="font-semibold text-red-800">Total Pengeluaran Bulan Ini</h4>
+                    <p class="text-2xl font-bold text-red-600">${formatCurrency(totalPengeluaran)}</p>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 class="font-semibold text-blue-800">Saldo Akhir Bulan</h4>
+                    <p class="text-2xl font-bold ${saldoAkhir < 0 ? 'balance-negative' : 'text-blue-600'}">${formatCurrency(saldoAkhir)}</p>
+                </div>
+            `;
+
+            // Store current report data for PDF generation
+            currentReportData = { 
+                student, 
+                reportData, 
+                totalPemasukan, 
+                totalPengeluaran, 
+                saldoAkhir, 
+                month, 
+                year, 
+                monthNum 
+            };
+
+            document.getElementById('reportContent').classList.remove('hidden');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function downloadReportPDF() {
+            if (!currentReportData) return;
+
+            const { student, reportData, totalPemasukan, totalPengeluaran, saldoAkhir, month, year, monthNum } = currentReportData;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Add logo if available
+            if (schoolSettings.logo) {
+                doc.addImage(schoolSettings.logo, 'JPEG', 20, 20, 25, 25);
+            }
+
+            // Header
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(schoolSettings.namaIndonesia, 105, 25, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(schoolSettings.namaArab, 105, 33, { align: 'center' });
+            doc.text(schoolSettings.namaInggris, 105, 40, { align: 'center' });
+            doc.text(schoolSettings.alamat, 105, 47, { align: 'center' });
+            doc.text(`Email: ${schoolSettings.email} | Instagram: ${schoolSettings.instagram} | NSPP: ${schoolSettings.nspp}`, 105, 54, { align: 'center' });
+
+            doc.line(20, 62, 190, 62);
+
+            // Title
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LAPORAN TABUNGAN SANTRI BULANAN', 105, 72, { align: 'center' });
+
+            // Student info
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            doc.text(`Nama: ${student.name}`, 20, 82);
+            doc.text(`Kelas: ${student.classLevel}`, 20, 89);
+            doc.text(`Status: ${student.status}`, 20, 96);
+            doc.text(`Periode: ${monthNames[monthNum - 1]} ${year}`, 20, 103);
+
+            // Table header
+            let yPos = 117;
+            doc.setFont('helvetica', 'bold');
+            doc.text('No', 20, yPos);
+            doc.text('Tanggal', 30, yPos);
+            doc.text('Keterangan', 60, yPos);
+            doc.text('Pemasukan', 120, yPos);
+            doc.text('Pengeluaran', 145, yPos);
+            doc.text('Saldo', 175, yPos);
+
+            doc.line(20, yPos + 2, 190, yPos + 2);
+
+            // Table data
+            doc.setFont('helvetica', 'normal');
+            yPos += 8;
+
+            reportData.forEach((row, index) => {
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 30;
+                }
+
+                doc.text((index + 1).toString(), 20, yPos);
+                doc.text(row.date.substring(0, 15), 30, yPos);
+                doc.text(row.description.substring(0, 25), 60, yPos);
+                doc.text(row.pemasukan ? formatCurrency(row.pemasukan) : '-', 120, yPos);
+                doc.text(row.pengeluaran ? formatCurrency(row.pengeluaran) : '-', 145, yPos);
+                doc.text(formatCurrency(row.balance), 175, yPos);
+
+                yPos += 7;
+            });
+
+            // Summary
+            yPos += 10;
+            if (yPos > 230) {
+                doc.addPage();
+                yPos = 30;
+            }
+
+            doc.line(20, yPos, 190, yPos);
+            yPos += 10;
+
+            doc.setFont('helvetica', 'bold');
+            doc.text('RINGKASAN:', 20, yPos);
+            yPos += 10;
+
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Total Pemasukan: ${formatCurrency(totalPemasukan)}`, 20, yPos);
+            doc.text(`Total Pengeluaran: ${formatCurrency(totalPengeluaran)}`, 20, yPos + 7);
+            doc.text(`Saldo Akhir: ${formatCurrency(saldoAkhir)}`, 20, yPos + 14);
+
+            const filename = `Laporan-${student.name.replace(/\s+/g, '_')}-${monthNames[monthNum - 1]}_${year}.pdf`;
+            doc.save(filename);
+        }
+
+        // Settings Management
+        function loadSchoolSettings() {
+            document.getElementById('namaIndonesia').value = schoolSettings.namaIndonesia;
+            document.getElementById('namaArab').value = schoolSettings.namaArab;
+            document.getElementById('namaInggris').value = schoolSettings.namaInggris;
+            document.getElementById('alamat').value = schoolSettings.alamat;
+            document.getElementById('email').value = schoolSettings.email;
+            document.getElementById('instagram').value = schoolSettings.instagram;
+            document.getElementById('nspp').value = schoolSettings.nspp;
+
+            // Update logo displays
+            if (schoolSettings.logo) {
+                document.getElementById('headerLogo').src = schoolSettings.logo;
+                document.getElementById('reportLogo').src = schoolSettings.logo;
+                document.getElementById('receiptLogo').src = schoolSettings.logo;
+                document.getElementById('loginLogo').src = schoolSettings.logo;
+
+                const preview = document.getElementById('logoPreview');
+                preview.innerHTML = `<img src="${schoolSettings.logo}" class="w-20 h-20 object-cover rounded-lg border" alt="Logo Preview" />`;
+            }
+        }
+
+        function saveSchoolSettings(event) {
+            event.preventDefault();
+            
+            schoolSettings.namaIndonesia = document.getElementById('namaIndonesia').value;
+            schoolSettings.namaArab = document.getElementById('namaArab').value;
+            schoolSettings.namaInggris = document.getElementById('namaInggris').value;
+            schoolSettings.alamat = document.getElementById('alamat').value;
+            schoolSettings.email = document.getElementById('email').value;
+            schoolSettings.instagram = document.getElementById('instagram').value;
+            schoolSettings.nspp = document.getElementById('nspp').value;
+
+            saveAllData();
+            alert('Pengaturan berhasil disimpan!');
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const logoData = e.target.result;
+                    schoolSettings.logo = logoData;
+                    saveAllData();
+
+                    // Update all logo displays
+                    document.getElementById('headerLogo').src = logoData;
+                    document.getElementById('reportLogo').src = logoData;
+                    document.getElementById('receiptLogo').src = logoData;
+                    document.getElementById('loginLogo').src = logoData;
+
+                    const preview = document.getElementById('logoPreview');
+                    preview.innerHTML = `<img src="${logoData}" class="w-20 h-20 object-cover rounded-lg border" alt="Logo Preview" />`;
+
+                    alert('Logo berhasil diupload!');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // User Management
+        function addUser(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+            const role = document.getElementById('newUserRole').value;
+            const linkedStudentId = role === 'SANTRI' ? parseInt(document.getElementById('linkedSantri').value) || null : null;
+
+            if (usersData.find(u => u.username === username)) {
+                alert('Username sudah ada!');
+                return;
+            }
+
+            if (role === 'SANTRI' && linkedStudentId && usersData.find(u => u.linkedStudentId === linkedStudentId)) {
+                alert('Santri ini sudah memiliki akun!');
+                return;
+            }
+
+            const newUser = {
+                id: generateId(usersData),
+                username: username,
+                password: password,
+                role: role,
+                linkedStudentId: linkedStudentId
+            };
+
+            usersData.push(newUser);
+            saveAllData();
+            
+            document.getElementById('userForm').reset();
+            document.getElementById('santriSelectForUser').classList.add('hidden');
+            loadUserList();
+            
+            alert('User berhasil ditambahkan!');
+        }
+
+        function loadUserList() {
+            const tbody = document.getElementById('userList');
+            tbody.innerHTML = usersData.map(user => {
+                const linkedStudent = user.linkedStudentId ? studentsData.find(s => s.id === user.linkedStudentId) : null;
+                
+                return `
+                    <tr>
+                        <td class="px-4 py-3 text-sm text-gray-900">${user.username}</td>
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                                user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 
+                                user.role === 'OPERATOR' ? 'bg-blue-100 text-blue-800' : 
+                                'bg-green-100 text-green-800'
+                            }">
+                                ${user.role}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            ${linkedStudent ? linkedStudent.name : '-'}
+                        </td>
+                        <td class="px-4 py-3 text-sm">
+                            ${user.username !== 'admin' ? 
+                                `<button onclick="deleteUser(${user.id})" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadLinkedSantriOptions() {
+            const select = document.getElementById('linkedSantri');
+            const availableStudents = studentsData.filter(s => 
+                !usersData.find(u => u.linkedStudentId === s.id)
+            );
+            
+            select.innerHTML = '<option value="">Pilih Santri</option>' + 
+                availableStudents.map(s => 
+                    `<option value="${s.id}">${s.name} (Kelas ${s.classLevel})</option>`
+                ).join('');
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Yakin ingin menghapus user ini?')) {
+                usersData = usersData.filter(u => u.id !== userId);
+                saveAllData();
+                loadUserList();
+            }
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            document.getElementById('loginForm').addEventListener('submit', login);
+            document.getElementById('santriForm').addEventListener('submit', addStudent);
+            document.getElementById('transaksiForm').addEventListener('submit', addTransaction);
+            document.getElementById('userForm').addEventListener('submit', addUser);
+            document.getElementById('schoolInfoForm').addEventListener('submit', saveSchoolSettings);
+            document.getElementById('editSantriForm').addEventListener('submit', saveEditStudent);
+            document.getElementById('logoUpload').addEventListener('change', handleLogoUpload);
+
+            // Show/hide santri select for user role
+            document.getElementById('newUserRole').addEventListener('change', function() {
+                const santriSelectDiv = document.getElementById('santriSelectForUser');
+                if (this.value === 'SANTRI') {
+                    santriSelectDiv.classList.remove('hidden');
+                    loadLinkedSantriOptions();
+                } else {
+                    santriSelectDiv.classList.add('hidden');
+                }
+            });
+
+            // Set current date for transaction form
+            document.getElementById('tanggalTransaksi').value = new Date().toISOString().split('T')[0];
+        }
+
+        function loadAllData() {
+            loadSantriData();
+            loadTransaksiData();
+            populateSelects();
+            loadUserList();
+            loadSchoolSettings();
+        }
+
+        function startClock() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // Initialize Application
+        window.addEventListener('load', function() {
+            initializeDemoData();
+            setupEventListeners();
+            setupInputMasking();
+            setupQuickSearch();
+            
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                currentUser = user;
+                currentUserRole = user.role;
+                
+                document.getElementById('currentUser').textContent = user.username;
+                document.getElementById('currentRole').textContent = `(${user.role})`;
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+
+                if (user.role === 'SANTRI') {
+                    adjustUIForSantriRole(user.linkedStudentId);
+                }
+
+                updateDashboard();
+                loadAllData();
+                startClock();
+            }
+        });
+    </script>
+</body>
+</html>
+
