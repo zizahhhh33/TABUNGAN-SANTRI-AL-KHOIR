@@ -1,0 +1,3146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabungan Santri - Pondok Pesantren Al-Khoir Palembani</title>
+    <script src="https://cdn.tailwindcss.com">
+
+function generateRekapSaldoPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(14);
+    doc.text("REKAP SALDO SANTRI", 14, 15);
+
+    // Ambil data santri + hitung saldo terbaru dengan calculateSaldo
+    const santriUsers = users.filter(u => u.role === 'santri');
+    const santriData = santriUsers.map(s => ({
+        ...s,
+        saldo: (typeof calculateSaldo === 'function') ? calculateSaldo(s.id) : Number(s.saldo) || 0
+    }));
+
+    // Hitung total keseluruhan saldo pakai Math.abs
+    const totalKeseluruhan = santriData.reduce((sum, s) => sum + Math.abs(s.saldo), 0);
+    const totalMinus = santriData.filter(s => s.saldo < 0).reduce((sum, s) => sum + s.saldo, 0);
+    const minusCount = santriData.filter(s => s.saldo < 0).length;
+
+    // Tambahkan tanggal
+    const now = new Date();
+    const tanggal = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Info tambahan
+    doc.setFontSize(10);
+    doc.text("Tanggal: " + tanggal, 14, 25);
+    doc.setFontSize(11);
+    doc.text("Total Keseluruhan Saldo: " + (typeof formatRupiah === 'function' ? formatRupiah(totalKeseluruhan) : ("Rp " + totalKeseluruhan.toLocaleString('id-ID'))), 14, 35);
+    doc.text("Total Saldo Minus: " + (typeof formatRupiah === 'function' ? formatRupiah(totalMinus) : ("Rp " + totalMinus.toLocaleString('id-ID'))), 14, 42);
+    doc.text("Santri dengan Saldo Minus: " + minusCount + " orang", 14, 49);
+
+    // Tabel data
+    const body = santriData.map((s, i) => [
+        i + 1,
+        s.nama || "-",
+        s.kelas || "-",
+        (typeof formatRupiah === 'function') ? formatRupiah(Number(s.saldo) || 0) : ("Rp " + (Number(s.saldo) || 0).toLocaleString('id-ID'))
+    ]);
+
+    doc.autoTable({
+        head: [["No", "Nama Santri", "Kelas", "Sisa Saldo"]],
+        body: body,
+        startY: 56,
+        styles: { fontSize: 9, cellPadding: 2 }
+    });
+
+    doc.save("Rekap_Saldo.pdf");
+}
+);
+
+        doc.save("Rekap_Saldo.pdf");
+    } catch (e) {
+        console.error("generateRekapSaldoPDF error:", e);
+        alert("Gagal membuat PDF rekap saldo. Cek console untuk detail.");
+    }
+}
+;
+
+    doc.save("Rekap_Saldo.pdf");
+}
+</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --pink-primary: #ec4899;
+            --pink-secondary: #f9a8d4;
+            --pink-light: #fce7f3;
+            --pink-dark: #be185d;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, var(--pink-primary) 0%, var(--pink-dark) 100%);
+        }
+
+        .card-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #fdf2f8 100%);
+            border: 2px solid var(--pink-secondary);
+        }
+
+        .btn-pink {
+            background: linear-gradient(135deg, var(--pink-primary) 0%, var(--pink-dark) 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-pink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-red:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .cat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .cat {
+            width: 80px;
+            height: 80px;
+            background: var(--pink-primary);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            animation: catBounce 3s ease-in-out infinite;
+            cursor: pointer;
+        }
+
+        .cat::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid var(--pink-primary);
+            transform: rotate(-30deg);
+        }
+
+        .cat::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid var(--pink-primary);
+            transform: rotate(30deg);
+        }
+
+        .cat-face {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: white;
+        }
+
+        @keyframes catBounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes catHappy {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-5px) rotate(-5deg); }
+            75% { transform: translateY(-5px) rotate(5deg); }
+        }
+
+        .cat.happy {
+            animation: catHappy 0.5s ease-in-out 3;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1002;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-result {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-result:hover {
+            background-color: #fce7f3;
+        }
+
+        .low-balance-alert {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .transaction-row:hover {
+            background-color: #fef7ff;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 999;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .logo-preview {
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #d1d5db;
+            border-radius: 50%;
+            padding: 20px;
+            text-align: center;
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin: 0 auto;
+        }
+
+        .logo-preview img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .logo-round {
+            border-radius: 50% !important;
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+        }
+
+        @media (max-width: 768px) {
+            .cat {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .cat-face {
+                font-size: 18px;
+                top: 15px;
+            }
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--pink-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .formatted-number {
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Animated Cat -->
+    <div class="cat-container">
+        <div class="cat" onclick="handleCatClick()">
+            <div class="cat-face">😸</div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification bg-yellow-500 text-white p-4 rounded-lg shadow-lg max-w-md">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <span id="notificationText"></span>
+        </div>
+    </div>
+
+    <!-- Low Balance Alert Notification -->
+    <div id="lowBalanceNotification" class="notification low-balance-alert bg-orange-500 text-white p-4 rounded-lg shadow-lg max-w-sm hidden">
+        <div class="flex items-center">
+            <i class="fas fa-bell mr-2"></i>
+            <div>
+                <p class="font-semibold">Peringatan Saldo!</p>
+                <p class="text-sm" id="lowBalanceText"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header-gradient text-white p-6 shadow-lg">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <div class="flex items-center justify-center md:justify-start mb-2">
+                        <img id="headerLogo" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/77159ea0-ee61-438d-9604-9f5234160543.png" alt="Logo Pondok Pesantren Al-Khoir Palembani dengan kaligrafi islami dan ornamen tradisional berwarna emas dalam bentuk bulat sempurna" class="logo-round mr-4 border-4 border-white shadow-lg">
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold">PONDOK PESANTREN</h1>
+                            <h2 class="text-xl md:text-2xl font-semibold">AL-KHOIR PALEMBANI</h2>
+                        </div>
+                    </div>
+                    <div class="text-sm md:text-base space-y-1">
+                        <p>Alamat: Jl. Soekarno Hatta Lingkar Barat No. 234 Palembang Sumatera Selatan</p>
+                        <p>Email: alkhoirislamicschool@gmail.com | Instagram: ponpes_alkhoirpalembani</p>
+                        <p>NSPP: 502316710040</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden btn-pink text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="userInfo" class="text-right hidden">
+                        <p class="font-semibold" id="userName"></p>
+                        <p class="text-sm opacity-90" id="userRole"></p>
+                    </div>
+                    <button onclick="logout()" class="btn-pink text-white px-4 py-2 rounded-lg hidden" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="card-gradient rounded-2xl p-8 shadow-2xl max-w-md w-full">
+            <div class="text-center mb-8">
+                <i class="fas fa-piggy-bank text-6xl text-pink-500 mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Tabungan Santri</h2>
+                <p class="text-gray-600">Pondok Pesantren Al-Khoir Palembani</p>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Username</label>
+                    <input type="text" id="loginUsername" required class="w-full p-4 border-2 border-pink-200 rounded-lg focus:border-pink-500 focus:outline-none transition-colors">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <input type="password" id="loginPassword" required class="w-full p-4 border-2 border-pink-200 rounded-lg focus:border-pink-500 focus:outline-none transition-colors">
+                </div>
+                
+                <button onclick="handleLogin()" class="w-full btn-pink text-white py-4 rounded-lg font-semibold text-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Masuk
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <div class="flex">
+            <!-- Sidebar -->
+            <div id="sidebar" class="sidebar w-64 bg-white shadow-lg min-h-screen p-6">
+                <nav class="space-y-4">
+                    <button onclick="showDashboard()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-pink-100 transition-colors">
+                        <i class="fas fa-dashboard mr-3 text-pink-500"></i>Dashboard
+                    </button>
+                    <button onclick="showTransaksi()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-pink-100 transition-colors">
+                        <i class="fas fa-exchange-alt mr-3 text-pink-500"></i>Transaksi
+                    </button>
+                    <button onclick="showNotifikasiSaldo()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-pink-100 transition-colors">
+                        <i class="fas fa-bell mr-3 text-pink-500"></i>Notifikasi Saldo
+                    </button>
+                    <div id="adminMenu" class="hidden space-y-2">
+                        <button onclick="showPenambahanSaldo()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-green-100 transition-colors">
+                            <i class="fas fa-plus-circle mr-3 text-green-500"></i>Penambahan Saldo
+                        </button>
+                        <button onclick="showPenguranganSaldo()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-red-100 transition-colors">
+                            <i class="fas fa-minus-circle mr-3 text-red-500"></i>Pengurangan Saldo
+                        </button>
+                        <button onclick="showManageSantri()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-pink-100 transition-colors">
+                            <i class="fas fa-users mr-3 text-pink-500"></i>Kelola Santri
+                        </button>
+                        <button onclick="showNotaHistory()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-pink-100 transition-colors">
+                            <i class="fas fa-receipt mr-3 text-pink-500"></i>Riwayat Nota
+                        </button>
+                        <button onclick="showLaporan()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-pink-100 transition-colors">
+                            <i class="fas fa-file-alt mr-3 text-pink-500"></i>Laporan
+                        </button>
+                        <button onclick="showSettings()" class="nav-btn w-full text-left p-3 rounded-lg hover:bg-pink-100 transition-colors">
+                            <i class="fas fa-cog mr-3 text-pink-500"></i>Pengaturan
+                        </button>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 p-6">
+                <!-- Dashboard -->
+                <div id="dashboardContent">
+                    <!-- Low Balance Alert Banner -->
+                    <div id="lowBalanceAlertBanner" class="bg-orange-100 border-l-4 border-orange-500 p-4 mb-6 rounded-lg hidden">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-orange-500 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-medium text-orange-800">Peringatan Saldo Menipis!</h3>
+                                <div id="lowBalanceAlertContent" class="mt-2 text-sm text-orange-700"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="card-gradient rounded-xl p-6 shadow-lg">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-pink-100">
+                                    <i class="fas fa-users text-pink-500 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-gray-600 text-sm">Total Santri</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalSantri">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6 shadow-lg">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100">
+                                    <i class="fas fa-coins text-green-500 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-gray-600 text-sm">Total Saldo</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalSaldo">Rp 0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6 shadow-lg">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-red-100">
+                                    <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-gray-600 text-sm">Saldo Minus</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalMinus">Rp 0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-gradient rounded-xl p-6 shadow-lg">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100">
+                                    <i class="fas fa-warning text-yellow-500 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-gray-600 text-sm">Saldo ≤ 20rb</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="saldoMenurun">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Santri -->
+                    <div class="card-gradient rounded-xl shadow-lg overflow-hidden mb-6">
+                        <div class="p-6 border-b border-pink-200">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                                <h3 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">Rekap Saldo Santri</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="exportToPDF()" class="btn-pink text-white px-4 py-2 rounded-lg text-sm">
+                                        <i class="fas fa-download mr-2"></i>Export PDF
+                                    </button>
+                                    <button onclick="refreshData()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                        <i class="fas fa-refresh mr-2"></i>Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="w-full">
+                                <thead class="bg-pink-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Santri</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sisa Saldo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="actionHeader">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="santriTableBody" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Summary -->
+                        <div class="p-6 bg-gray-50 border-t border-gray-200">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <span class="font-semibold text-gray-700">Total Keseluruhan Saldo: </span>
+                                    <span class="text-green-600 font-bold" id="summaryTotalSaldo">Rp 0</span>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-700">Total Saldo Minus: </span>
+                                    <span class="text-red-600 font-bold" id="summaryTotalMinus">Rp 0</span>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-700">Santri dengan Saldo Minus: </span>
+                                    <span class="text-red-600 font-bold" id="summaryMinusCount">0 orang</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Santri Minus -->
+                    <div id="minusTable" class="card-gradient rounded-xl shadow-lg overflow-hidden hidden">
+                        <div class="p-6 border-b border-red-200">
+                            <h3 class="text-xl font-bold text-red-800">Daftar Santri dengan Saldo Minus</h3>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="w-full">
+                                <thead class="bg-red-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Santri</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Minus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="minusTableBody" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifikasi Saldo Content -->
+                <div id="notifikasiSaldoContent" class="hidden">
+                    <div class="card-gradient rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Notifikasi Saldo</h3>
+                        
+                        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h4 class="font-semibold text-blue-800 mb-3">Informasi Saldo Santri</h4>
+                            <p class="text-sm text-blue-700 mb-3">
+                                Halaman ini menampilkan daftar santri yang memiliki saldo rendah (≤ Rp20.000) atau saldo minus.
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="filterNotifikasi('all')" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-list mr-2"></i>Semua
+                                </button>
+                                <button onclick="filterNotifikasi('low')" class="filter-btn bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Saldo Rendah
+                                </button>
+                                <button onclick="filterNotifikasi('minus')" class="filter-btn bg-red-500 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-minus-circle mr-2"></i>Saldo Minus
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="w-full">
+                                <thead class="bg-pink-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Santri</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="notifActionHeader">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notifikasiTableBody" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Penambahan Saldo Content -->
+                <div id="penambahanSaldoContent" class="hidden">
+                    <div class="card-gradient rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">
+                            <i class="fas fa-plus-circle mr-2 text-green-500"></i>
+                            Penambahan Saldo Santri
+                        </h3>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cari Santri</label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="searchSantriPenambahan" 
+                                    placeholder="Ketik nama santri untuk mencari..."
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none"
+                                    oninput="searchSantriPenambahan(this.value)"
+                                >
+                                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                            </div>
+                            
+                            <div id="searchResultsPenambahan" class="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+                            </div>
+                        </div>
+
+                        <div id="selectedSantriInfoPenambahan" class="hidden mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">Santri Terpilih:</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Nama: </span>
+                                    <span class="font-medium" id="selectedSantriNamePenambahan">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Kelas: </span>
+                                    <span class="font-medium" id="selectedSantriKelasPenambahan">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Saldo: </span>
+                                    <span class="font-medium" id="selectedSantriSaldoPenambahan">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="penambahanSaldoForm" class="hidden space-y-4">
+                            <input type="hidden" id="selectedUserIdPenambahan">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Penambahan (Rp)</label>
+                                    <input type="text" id="penambahanAmount" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none formatted-number" placeholder="0" oninput="formatNumberInput(this)">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Metode Pembayaran</label>
+                                    <select id="penambahanPaymentMethod" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                                        <option value="">Pilih Metode</option>
+                                        <option value="Transfer BNI">Transfer BNI</option>
+                                        <option value="Transfer BRI">Transfer BRI</option>
+                                        <option value="Transfer Mandiri">Transfer Mandiri</option>
+                                        <option value="Cash">Cash (Tunai)</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                                <input type="text" id="penambahanNote" placeholder="Contoh: setoran bulanan, transfer dari wali, uang jajan tambahan" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                            </div>
+                            
+                            <div class="flex space-x-3">
+                                <button onclick="submitPenambahanSaldo()" class="flex-1 btn-green text-white py-3 rounded-lg font-semibold">
+                                    <i class="fas fa-plus mr-2"></i>Tambah Saldo
+                                </button>
+                                <button onclick="clearPenambahanSaldo()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                                    <i class="fas fa-times mr-2"></i>Batal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pengurangan Saldo Content -->
+                <div id="penguranganSaldoContent" class="hidden">
+                    <div class="card-gradient rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">
+                            <i class="fas fa-minus-circle mr-2 text-red-500"></i>
+                            Pengurangan Saldo Santri
+                        </h3>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cari Santri</label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="searchSantriPengurangan" 
+                                    placeholder="Ketik nama santri untuk mencari..."
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none"
+                                    oninput="searchSantriPengurangan(this.value)"
+                                >
+                                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                            </div>
+                            
+                            <div id="searchResultsPengurangan" class="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+                            </div>
+                        </div>
+
+                        <div id="selectedSantriInfoPengurangan" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <h4 class="font-semibold text-gray-800 mb-2">Santri Terpilih:</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Nama: </span>
+                                    <span class="font-medium" id="selectedSantriNamePengurangan">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Kelas: </span>
+                                    <span class="font-medium" id="selectedSantriKelasPengurangan">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Saldo: </span>
+                                    <span class="font-medium" id="selectedSantriSaldoPengurangan">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="penguranganSaldoForm" class="hidden space-y-4">
+                            <input type="hidden" id="selectedUserIdPengurangan">
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Pengurangan (Rp)</label>
+                                <input type="text" id="penguranganAmount" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none formatted-number" placeholder="0" oninput="formatNumberInput(this)">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                                <input type="text" id="penguranganNote" placeholder="Contoh: jajan sosis, laundry, keperluan sekolah, kantin" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                            </div>
+                            
+                            <div class="flex space-x-3">
+                                <button onclick="submitPenguranganSaldo()" class="flex-1 btn-red text-white py-3 rounded-lg font-semibold">
+                                    <i class="fas fa-minus mr-2"></i>Kurangi Saldo
+                                </button>
+                                <button onclick="clearPenguranganSaldo()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                                    <i class="fas fa-times mr-2"></i>Batal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaksi Content -->
+                <div id="transaksiContent" class="hidden">
+                    <div class="card-gradient rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Riwayat Transaksi</h3>
+                        
+                        <div class="mb-6 flex flex-wrap gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                                <input type="date" id="startDate" class="p-2 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+                                <input type="date" id="endDate" class="p-2 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="filterTransaksi()" class="btn-pink text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-filter mr-2"></i>Filter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="w-full">
+                                <thead class="bg-pink-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Santri</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="transactionActionHeader">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transaksiTableBody" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nota History Content -->
+                <div id="notaHistoryContent" class="hidden">
+                    <div class="card-gradient rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">
+                            <i class="fas fa-receipt mr-2 text-pink-500"></i>
+                            Riwayat Nota Penambahan Saldo
+                        </h3>
+                        
+                        <div class="mb-6 flex flex-wrap gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                                <input type="date" id="notaStartDate" class="p-2 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+                                <input type="date" id="notaEndDate" class="p-2 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="filterNotaHistory()" class="btn-pink text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-filter mr-2"></i>Filter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="w-full">
+                                <thead class="bg-pink-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Santri</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metode</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notaHistoryTableBody" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manage Santri Content -->
+                <div id="manageSantriContent" class="hidden">
+                    <div class="card-gradient rounded-xl shadow-lg p-6 mb-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">Kelola Santri</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="showAddSantriModal()" class="btn-pink text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-plus mr-2"></i>Tambah Santri
+                                </button>
+                                <button onclick="showNaikKelasModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-arrow-up mr-2"></i>Naik Kelas Massal
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="w-full">
+                                <thead class="bg-pink-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No HP Wali</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manageSantriTableBody" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Laporan Content -->
+                <div id="laporanContent" class="hidden">
+                    <div class="card-gradient rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">
+                            <i class="fas fa-chart-line mr-2 text-pink-500"></i>
+                            Laporan & Export
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="p-6 border border-pink-200 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105">
+                                <div class="text-center">
+                                    <i class="fas fa-calendar-day text-pink-500 text-3xl mb-4"></i>
+                                    <h4 class="font-semibold mb-2">Laporan Harian</h4>
+                                    <p class="text-sm text-gray-600 mb-4">Export data transaksi hari ini</p>
+                                    <button onclick="exportDailyReport()" class="btn-pink text-white px-4 py-2 rounded-lg w-full">
+                                        <i class="fas fa-download mr-2"></i>Export PDF
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="p-6 border border-pink-200 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105">
+                                <div class="text-center">
+                                    <i class="fas fa-calendar-alt text-pink-500 text-3xl mb-4"></i>
+                                    <h4 class="font-semibold mb-2">Laporan Bulanan</h4>
+                                    <p class="text-sm text-gray-600 mb-4">Export data transaksi bulan ini</p>
+                                    <button onclick="exportMonthlyReport()" class="btn-pink text-white px-4 py-2 rounded-lg w-full">
+                                        <i class="fas fa-download mr-2"></i>Export PDF
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="p-6 border border-pink-200 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105">
+                                <div class="text-center">
+                                    <i class="fas fa-chart-bar text-pink-500 text-3xl mb-4"></i>
+                                    <h4 class="font-semibold mb-2">Rekap Saldo</h4>
+                                    <p class="text-sm text-gray-600 mb-4">Export rekap saldo semua santri</p>
+                                    <button onclick="exportToPDF()" class="btn-pink text-white px-4 py-2 rounded-lg w-full">
+                                        <i class="fas fa-download mr-2"></i>Export PDF
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="p-6 border border-pink-200 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105">
+                                <div class="text-center">
+                                    <i class="fas fa-user-chart text-pink-500 text-3xl mb-4 animate-bounce"></i>
+                                    <h4 class="font-semibold mb-2">Rekap Per Santri</h4>
+                                    <p class="text-sm text-gray-600 mb-4">Export rekap individual santri</p>
+                                    <button onclick="showRekapPerSantriModal()" class="btn-pink text-white px-4 py-2 rounded-lg w-full">
+                                        <i class="fas fa-download mr-2"></i>Pilih Santri
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Content -->
+                <div id="settingsContent" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Account Settings -->
+                        <div class="card-gradient rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Pengaturan Akun Admin</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                    <input type="text" id="adminUsername" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru (kosongkan jika tidak diubah)</label>
+                                    <input type="password" id="adminPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                                </div>
+                                
+                                <div class="flex space-x-3">
+                                    <button onclick="updateAdminAccount()" class="btn-pink text-white px-6 py-3 rounded-lg">
+                                        <i class="fas fa-save mr-2"></i>Simpan Perubahan
+                                    </button>
+                                    <button onclick="sendAdminCredentialsToWhatsApp()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition-colors">
+                                        <i class="fab fa-whatsapp mr-2"></i>Kirim ke WhatsApp
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bank Settings -->
+                        <div class="card-gradient rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Pengaturan Rekening</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Bank</label>
+                                    <input type="text" id="settingsBankName" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor Rekening</label>
+                                    <input type="text" id="settingsAccountNumber" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pemilik</label>
+                                    <input type="text" id="settingsAccountOwner" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                                </div>
+                                
+                                <button onclick="updateBankSettings()" class="btn-pink text-white px-6 py-3 rounded-lg">
+                                    <i class="fas fa-save mr-2"></i>Simpan Perubahan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Logo Settings -->
+                        <div class="card-gradient rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Pengaturan Logo</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload Logo Sekolah</label>
+                                    <input type="file" id="logoInput" accept="image/*" onchange="handleLogoUpload(event)" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                                </div>
+                                
+                                <div class="logo-preview" id="logoPreview">
+                                    <img id="logoImage" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/3a45172e-bc7a-491e-9f8e-cf091c6604fc.png" alt="Preview logo sekolah bulat sempurna dengan ornamen islami" class="mx-auto">
+                                    <p class="text-gray-500 text-sm mt-2">Preview Logo (Bulat)</p>
+                                </div>
+                                
+                                <button onclick="saveLogo()" class="btn-pink text-white px-6 py-3 rounded-lg">
+                                    <i class="fas fa-save mr-2"></i>Simpan Logo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Add Santri Modal -->
+    <div id="addSantriModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Tambah Santri Baru</h3>
+                <button onclick="closeModal('addSantriModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="newSantriUsername" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="newSantriPassword" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="newSantriNama" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                    <select id="newSantriKelas" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                        <option value="">Pilih Kelas</option>
+                        <option value="7A">7A</option>
+                        <option value="7B">7B</option>
+                        <option value="8A">8A</option>
+                        <option value="8B">8B</option>
+                        <option value="9A">9A</option>
+                        <option value="9B">9B</option>
+                        <option value="10A">10A</option>
+                        <option value="10B">10B</option>
+                        <option value="11A">11A</option>
+                        <option value="11B">11B</option>
+                        <option value="12A">12A</option>
+                        <option value="12B">12B</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">No HP Wali</label>
+                    <input type="text" id="newSantriHP" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="addSantri()" class="flex-1 btn-pink text-white py-3 rounded-lg font-semibold">
+                        <i class="fas fa-plus mr-2"></i>Tambah
+                    </button>
+                    <button onclick="closeModal('addSantriModal')" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Santri Modal -->
+    <div id="editSantriModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Edit Santri</h3>
+                <button onclick="closeModal('editSantriModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <input type="hidden" id="editSantriId">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="editSantriUsername" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru (kosongkan jika tidak diubah)</label>
+                    <input type="password" id="editSantriPassword" class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="editSantriNama" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                    <select id="editSantriKelas" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                        <option value="7A">7A</option>
+                        <option value="7B">7B</option>
+                        <option value="8A">8A</option>
+                        <option value="8B">8B</option>
+                        <option value="9A">9A</option>
+                        <option value="9B">9B</option>
+                        <option value="10A">10A</option>
+                        <option value="10B">10B</option>
+                        <option value="11A">11A</option>
+                        <option value="11B">11B</option>
+                        <option value="12A">12A</option>
+                        <option value="12B">12B</option>
+                        <option value="Alumni MTS">Alumni MTS</option>
+                        <option value="Alumni MA">Alumni MA</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="editSantriStatus" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                        <option value="aktif">Aktif</option>
+                        <option value="alumni">Alumni</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">No HP Wali</label>
+                    <input type="text" id="editSantriHP" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="updateSantri()" class="flex-1 btn-pink text-white py-3 rounded-lg font-semibold">
+                        <i class="fas fa-save mr-2"></i>Simpan
+                    </button>
+                    <button onclick="closeModal('editSantriModal')" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Naik Kelas Modal -->
+    <div id="naikKelasModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Naik Kelas Massal</h3>
+                <button onclick="closeModal('naikKelasModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">Pilih kelas yang akan dinaikkan:</p>
+                <div class="space-y-3">
+                    <button onclick="naikKelas('7')" class="w-full p-3 border border-pink-200 rounded-lg hover:bg-pink-50 text-left transition-colors">
+                        <i class="fas fa-arrow-up mr-2 text-pink-500"></i>
+                        Naik Kelas 7 → 8
+                    </button>
+                    <button onclick="naikKelas('8')" class="w-full p-3 border border-pink-200 rounded-lg hover:bg-pink-50 text-left transition-colors">
+                        <i class="fas fa-arrow-up mr-2 text-pink-500"></i>
+                        Naik Kelas 8 → 9
+                    </button>
+                    <button onclick="naikKelas('9')" class="w-full p-3 border border-pink-200 rounded-lg hover:bg-pink-50 text-left transition-colors">
+                        <i class="fas fa-graduation-cap mr-2 text-pink-500"></i>
+                        Kelas 9 → Alumni MTS
+                    </button>
+                    <button onclick="naikKelas('10')" class="w-full p-3 border border-pink-200 rounded-lg hover:bg-pink-50 text-left transition-colors">
+                        <i class="fas fa-arrow-up mr-2 text-pink-500"></i>
+                        Naik Kelas 10 → 11
+                    </button>
+                    <button onclick="naikKelas('11')" class="w-full p-3 border border-pink-200 rounded-lg hover:bg-pink-50 text-left transition-colors">
+                        <i class="fas fa-arrow-up mr-2 text-pink-500"></i>
+                        Naik Kelas 11 → 12
+                    </button>
+                    <button onclick="naikKelas('12')" class="w-full p-3 border border-pink-200 rounded-lg hover:bg-pink-50 text-left transition-colors">
+                        <i class="fas fa-graduation-cap mr-2 text-pink-500"></i>
+                        Kelas 12 → Alumni MA
+                    </button>
+                </div>
+            </div>
+            
+            <button onclick="closeModal('naikKelasModal')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- Rekap Per Santri Modal -->
+    <div id="rekapPerSantriModal" class="modal">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-chart-line mr-2 text-pink-500 animate-pulse"></i>
+                    Rekap Per Santri
+                </h3>
+                <button onclick="closeModal('rekapPerSantriModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Santri</label>
+                    <select id="rekapSantriSelect" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                        <option value="">Pilih Santri</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" id="rekapStartDate" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+                        <input type="date" id="rekapEndDate" required class="w-full p-3 border border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none">
+                    </div>
+                </div>
+                
+                <div id="loadingRekap" class="hidden text-center">
+                    <div class="loading-spinner"></div>
+                    <p class="text-gray-600">Generating rekap...</p>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="generateRekapPerSantri()" class="flex-1 btn-pink text-white py-3 rounded-lg font-semibold">
+                        <i class="fas fa-download mr-2"></i>Generate PDF
+                    </button>
+                    <button id="sendRekapBtn" onclick="sendRekapToParent()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold transition-colors" disabled>
+                        <i class="fab fa-whatsapp mr-2"></i>Kirim ke Wali
+                    </button>
+                    <button onclick="closeModal('rekapPerSantriModal')" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition-colors">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let currentUser = null;
+        let users = [
+            {
+                id: 1,
+                username: 'admin',
+                password: 'admin123',
+                nama: 'Administrator',
+                role: 'admin',
+                kelas: null,
+                status: 'aktif',
+                noHpWali: null
+            },
+            {
+                id: 2,
+                username: 'santri1',
+                password: 'santri123',
+                nama: 'Ahmad Fauzi',
+                role: 'santri',
+                kelas: '7A',
+                status: 'aktif',
+                noHpWali: '081234567890'
+            },
+            {
+                id: 3,
+                username: 'santri2',
+                password: 'santri123',
+                nama: 'Fatimah Zahra',
+                role: 'santri',
+                kelas: '8B',
+                status: 'aktif',
+                noHpWali: '081234567891'
+            },
+            {
+                id: 4,
+                username: 'santri3',
+                password: 'santri123',
+                nama: 'Muhammad Ali',
+                role: 'santri',
+                kelas: '9A',
+                status: 'aktif',
+                noHpWali: '081234567892'
+            }
+        ];
+        
+        let transactions = [
+            {
+                id: 1,
+                userId: 2,
+                jenis: 'masuk',
+                jumlah: 100000,
+                keterangan: 'Setoran awal',
+                paymentMethod: 'Transfer BNI',
+                tanggal: new Date('2024-01-15'),
+                adminId: 1
+            },
+            {
+                id: 2,
+                userId: 3,
+                jenis: 'masuk',
+                jumlah: 50000,
+                keterangan: 'Transfer BNI',
+                paymentMethod: 'Transfer BNI',
+                tanggal: new Date('2024-01-16'),
+                adminId: 1
+            },
+            {
+                id: 3,
+                userId: 4,
+                jenis: 'masuk',
+                jumlah: 25000,
+                keterangan: 'Uang jajan tambahan',
+                paymentMethod: 'Cash',
+                tanggal: new Date('2024-01-17'),
+                adminId: 1
+            },
+            {
+                id: 4,
+                userId: 2,
+                jenis: 'keluar',
+                jumlah: 85000,
+                keterangan: 'Jajan dan keperluan sekolah',
+                tanggal: new Date('2024-01-18'),
+                adminId: 1
+            },
+            {
+                id: 5,
+                userId: 3,
+                jenis: 'keluar',
+                jumlah: 35000,
+                keterangan: 'Laundry',
+                tanggal: new Date('2024-01-19'),
+                adminId: 1
+            },
+            {
+                id: 6,
+                userId: 4,
+                jenis: 'keluar',
+                jumlah: 30000,
+                keterangan: 'Jajan dan keperluan sekolah',
+                tanggal: new Date('2024-01-20'),
+                adminId: 1
+            }
+        ];
+        
+        let settings = {
+            bankName: 'BNI',
+            accountNumber: '0976325338',
+            accountOwner: 'IMAMATUL AZIZAH',
+            logo: null
+        };
+        
+        let lowBalanceNotificationShown = false;
+        let adminPhoneNumber = '08994459293';
+        let adminEmail = 'azizahdanbi@gmail.com';
+        let lastGeneratedRekapData = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+            
+            const today = new Date().toISOString().split('T')[0];
+            if (document.getElementById('startDate')) {
+                document.getElementById('startDate').value = today;
+                document.getElementById('endDate').value = today;
+            }
+        });
+
+        function initializeData() {
+            const savedUsers = localStorage.getItem('santri_users');
+            const savedTransactions = localStorage.getItem('santri_transactions');
+            const savedSettings = localStorage.getItem('santri_settings');
+
+            if (savedUsers) {
+                users = JSON.parse(savedUsers);
+            } else {
+                saveUsers();
+            }
+
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+            } else {
+                saveTransactions();
+            }
+
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+                if (settings.logo) {
+                    document.getElementById('headerLogo').src = settings.logo;
+                }
+            } else {
+                saveSettings();
+            }
+        }
+
+        function saveUsers() {
+            localStorage.setItem('santri_users', JSON.stringify(users));
+        }
+
+        function saveTransactions() {
+            localStorage.setItem('santri_transactions', JSON.stringify(transactions));
+        }
+
+        function saveSettings() {
+            localStorage.setItem('santri_settings', JSON.stringify(settings));
+        }
+
+        // Login function
+        function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                
+                document.getElementById('userName').textContent = user.nama;
+                document.getElementById('userRole').textContent = user.role === 'admin' ? 'Administrator' : 'Santri';
+                
+                if (user.role === 'admin') {
+                    document.getElementById('adminMenu').classList.remove('hidden');
+                    document.getElementById('actionHeader').classList.remove('hidden');
+                    if (document.getElementById('transactionActionHeader')) {
+                        document.getElementById('transactionActionHeader').classList.remove('hidden');
+                    }
+                    if (document.getElementById('notifActionHeader')) {
+                        document.getElementById('notifActionHeader').classList.remove('hidden');
+                    }
+                    showDashboard();
+                } else {
+                    document.getElementById('adminMenu').classList.add('hidden');
+                    document.getElementById('actionHeader').classList.add('hidden');
+                    if (document.getElementById('transactionActionHeader')) {
+                        document.getElementById('transactionActionHeader').classList.add('hidden');
+                    }
+                    if (document.getElementById('notifActionHeader')) {
+                        document.getElementById('notifActionHeader').classList.add('hidden');
+                    }
+                    showDashboard();
+                }
+                
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                
+                showNotification('Login berhasil!', 'success');
+            } else {
+                showNotification('Username atau password salah!', 'error');
+            }
+        }
+
+        // Number formatting function
+        function formatNumberInput(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value) {
+                value = parseInt(value).toLocaleString('id-ID');
+            }
+            input.value = value;
+        }
+
+        function parseFormattedNumber(formattedNumber) {
+            return parseInt(formattedNumber.replace(/\./g, '')) || 0;
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = null;
+            lowBalanceNotificationShown = false;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('userInfo').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+        }
+
+        // Navigation functions
+        function showDashboard() {
+            hideAllContent();
+            document.getElementById('dashboardContent').classList.remove('hidden');
+            updateDashboard();
+            setActiveNav(0);
+        }
+
+        function showTransaksi() {
+            hideAllContent();
+            document.getElementById('transaksiContent').classList.remove('hidden');
+            loadTransaksi();
+            setActiveNav(1);
+        }
+
+        function showNotifikasiSaldo() {
+            hideAllContent();
+            document.getElementById('notifikasiSaldoContent').classList.remove('hidden');
+            loadNotifikasiSaldo();
+            setActiveNav(2);
+        }
+
+        function showPenambahanSaldo() {
+            hideAllContent();
+            document.getElementById('penambahanSaldoContent').classList.remove('hidden');
+            clearPenambahanSaldo();
+            setActiveNav(3);
+        }
+
+        function showPenguranganSaldo() {
+            hideAllContent();
+            document.getElementById('penguranganSaldoContent').classList.remove('hidden');
+            clearPenguranganSaldo();
+            setActiveNav(4);
+        }
+
+        function showManageSantri() {
+            hideAllContent();
+            document.getElementById('manageSantriContent').classList.remove('hidden');
+            loadManageSantri();
+            setActiveNav(5);
+        }
+
+        function showNotaHistory() {
+            hideAllContent();
+            document.getElementById('notaHistoryContent').classList.remove('hidden');
+            loadNotaHistory();
+            setActiveNav(6);
+        }
+
+        function showLaporan() {
+            hideAllContent();
+            document.getElementById('laporanContent').classList.remove('hidden');
+            setActiveNav(7);
+        }
+
+        function showSettings() {
+            hideAllContent();
+            document.getElementById('settingsContent').classList.remove('hidden');
+            loadSettings();
+            setActiveNav(8);
+        }
+
+        function hideAllContent() {
+            const contents = [
+                'dashboardContent', 'transaksiContent', 'notifikasiSaldoContent',
+                'penambahanSaldoContent', 'penguranganSaldoContent', 'manageSantriContent',
+                'notaHistoryContent', 'laporanContent', 'settingsContent'
+            ];
+            
+            contents.forEach(contentId => {
+                const element = document.getElementById(contentId);
+                if (element) {
+                    element.classList.add('hidden');
+                }
+            });
+        }
+
+        function setActiveNav(index) {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach((btn, i) => {
+                if (i === index) {
+                    btn.classList.add('bg-pink-100', 'text-pink-700');
+                } else {
+                    btn.classList.remove('bg-pink-100', 'text-pink-700');
+                }
+            });
+        }
+
+        function calculateSaldo(userId) {
+            const userTransactions = transactions.filter(t => t.userId === userId);
+            return userTransactions.reduce((saldo, t) => {
+                return t.jenis === 'masuk' ? saldo + t.jumlah : saldo - t.jumlah;
+            }, 0);
+        }
+
+        function updateDashboard() {
+            const santriUsers = users.filter(u => u.role === 'santri');
+            const santriData = santriUsers.map(santri => ({
+                ...santri,
+                saldo: calculateSaldo(santri.id)
+            }));
+
+            document.getElementById('totalSantri').textContent = santriUsers.length;
+            
+            const totalSaldo = santriData.reduce((sum, s) => sum + Math.abs(s.saldo), 0);
+            document.getElementById('totalSaldo').textContent = formatRupiah(totalSaldo);
+            
+            const minusSantri = santriData.filter(s => s.saldo < 0);
+            const totalMinus = minusSantri.reduce((sum, s) => sum + s.saldo, 0);
+            document.getElementById('totalMinus').textContent = formatRupiah(totalMinus);
+            
+            const lowBalanceSantri = santriData.filter(s => s.saldo <= 20000 && s.saldo >= 0);
+            document.getElementById('saldoMenurun').textContent = lowBalanceSantri.length;
+
+            updateSantriTable(santriData);
+            updateSummary(santriData);
+            showLowBalanceAlertBanner(lowBalanceSantri, minusSantri);
+            updateMinusTable(minusSantri);
+        }
+
+        function updateSantriTable(santriData) {
+            const tbody = document.getElementById('santriTableBody');
+            tbody.innerHTML = '';
+
+            santriData.forEach((santri, index) => {
+                const row = document.createElement('tr');
+                row.className = 'slide-in';
+                
+                let balanceClass = '';
+                if (santri.saldo < 0) {
+                    balanceClass = 'text-red-600 font-bold';
+                } else if (santri.saldo <= 20000) {
+                    balanceClass = 'text-yellow-600 font-bold';
+                } else {
+                    balanceClass = 'text-green-600 font-bold';
+                }
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900">${index + 1}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">${santri.nama}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${santri.kelas}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${santri.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${santri.status.charAt(0).toUpperCase() + santri.status.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm ${balanceClass}">${formatRupiah(santri.saldo)}</td>
+                    <td class="px-6 py-4 text-sm">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <div class="flex space-x-2">
+                                <button onclick="quickAddSaldo(${santri.id}, '${santri.nama}')" class="btn-green text-white px-3 py-1 rounded text-xs hover:bg-green-600 transition-colors">
+                                    <i class="fas fa-plus mr-1"></i>Tambah
+                                </button>
+                                <button onclick="quickMinusSaldo(${santri.id}, '${santri.nama}')" class="btn-red text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition-colors">
+                                    <i class="fas fa-minus mr-1"></i>Kurang
+                                </button>
+                                ${santri.saldo <= 20000 ? `
+                                    <button onclick="sendWhatsApp('${santri.nama}', ${santri.saldo}, '${santri.noHpWali}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                        <i class="fab fa-whatsapp mr-1"></i>WA
+                                    </button>
+                                ` : ''}
+                            </div>
+                        ` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateSummary(santriData) {
+            // total keseluruhan = sum of absolute values (hitungan semua saldo tanpa tanda)
+            const totalSaldo = santriData.reduce((sum, s) => sum + Math.abs(s.saldo), 0);
+            const minusSantri = santriData.filter(s => s.saldo < 0);
+            const totalMinus = minusSantri.reduce((sum, s) => sum + s.saldo, 0);
+
+            // Update summary elements
+            const elKeseluruhan = document.getElementById('summaryTotalKeseluruhan') || document.getElementById('summaryTotalSaldo');
+            if (elKeseluruhan) elKeseluruhan.textContent = formatRupiah(totalSaldo);
+
+            const elTotalMinus = document.getElementById('summaryTotalMinus');
+            if (elTotalMinus) elTotalMinus.textContent = formatRupiah(totalMinus);
+
+            const elMinusCount = document.getElementById('summaryMinusCount');
+            if (elMinusCount) elMinusCount.textContent = `${minusSantri.length} orang`;
+        }
+
+        function updateMinusTable(minusSantri) {
+            const minusTable = document.getElementById('minusTable');
+            const tbody = document.getElementById('minusTableBody');
+            
+            if (minusSantri.length > 0) {
+                minusTable.classList.remove('hidden');
+                tbody.innerHTML = '';
+                
+                minusSantri.forEach((santri, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'slide-in';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 text-sm text-gray-900">${index + 1}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 font-medium">${santri.nama}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${santri.kelas}</td>
+                        <td class="px-6 py-4 text-sm text-red-600 font-bold">${formatRupiah(santri.saldo)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                minusTable.classList.add('hidden');
+            }
+        }
+
+        function showLowBalanceAlertBanner(lowBalanceSantri, minusSantri) {
+            const banner = document.getElementById('lowBalanceAlertBanner');
+            const content = document.getElementById('lowBalanceAlertContent');
+            
+            const allLowBalance = [...lowBalanceSantri, ...minusSantri];
+            
+            if (allLowBalance.length > 0 && currentUser && currentUser.role === 'admin') {
+                banner.classList.remove('hidden');
+                
+                const names = allLowBalance.map(s => `${s.nama} (${formatRupiah(s.saldo)})`).join(', ');
+                content.innerHTML = `
+                    <p><strong>${allLowBalance.length} santri</strong> memiliki saldo ≤ Rp20.000:</p>
+                    <p class="mt-1 text-sm">${names}</p>
+                `;
+                
+                if (!lowBalanceNotificationShown) {
+                    showLowBalancePopupNotification(allLowBalance);
+                    lowBalanceNotificationShown = true;
+                }
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function showLowBalancePopupNotification(lowBalanceSantri) {
+            const notification = document.getElementById('lowBalanceNotification');
+            const text = document.getElementById('lowBalanceText');
+            
+            text.textContent = `${lowBalanceSantri.length} santri memiliki saldo ≤ Rp20.000`;
+            
+            notification.classList.remove('hidden');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.classList.add('hidden');
+                }, 300);
+            }, 5000);
+        }
+
+        function quickAddSaldo(userId, nama) {
+            showPenambahanSaldo();
+            
+            setTimeout(() => {
+                const santri = users.find(u => u.id === userId);
+                if (santri) {
+                    selectSantriPenambahan(santri);
+                }
+            }, 100);
+        }
+
+        function quickMinusSaldo(userId, nama) {
+            showPenguranganSaldo();
+            
+            setTimeout(() => {
+                const santri = users.find(u => u.id === userId);
+                if (santri) {
+                    selectSantriPengurangan(santri);
+                }
+            }, 100);
+        }
+
+        // Notifikasi Saldo Functions
+        function loadNotifikasiSaldo() {
+            filterNotifikasi('all');
+        }
+
+        function filterNotifikasi(filter) {
+            const santriUsers = users.filter(u => u.role === 'santri');
+            const santriData = santriUsers.map(santri => ({
+                ...santri,
+                saldo: calculateSaldo(santri.id)
+            }));
+
+            let filteredData = santriData;
+
+            if (filter === 'low') {
+                filteredData = santriData.filter(s => s.saldo <= 20000 && s.saldo >= 0);
+            } else if (filter === 'minus') {
+                filteredData = santriData.filter(s => s.saldo < 0);
+            }
+
+            updateNotifikasiTable(filteredData);
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'bg-yellow-600', 'bg-red-600');
+                btn.classList.add('bg-gray-400');
+            });
+
+            const activeBtn = event ? event.target.closest('.filter-btn') : document.querySelector('.filter-btn');
+            if (activeBtn) {
+                if (filter === 'all') {
+                    activeBtn.classList.remove('bg-gray-400');
+                    activeBtn.classList.add('bg-blue-600');
+                } else if (filter === 'low') {
+                    activeBtn.classList.remove('bg-gray-400');
+                    activeBtn.classList.add('bg-yellow-600');
+                } else if (filter === 'minus') {
+                    activeBtn.classList.remove('bg-gray-400');
+                    activeBtn.classList.add('bg-red-600');
+                }
+            }
+        }
+
+        function updateNotifikasiTable(santriData) {
+            const tbody = document.getElementById('notifikasiTableBody');
+            tbody.innerHTML = '';
+
+            santriData.forEach((santri, index) => {
+                const row = document.createElement('tr');
+                row.className = 'slide-in';
+                
+                let balanceClass = '';
+                let statusText = '';
+                if (santri.saldo < 0) {
+                    balanceClass = 'text-red-600 font-bold';
+                    statusText = 'Saldo Minus';
+                } else if (santri.saldo <= 20000) {
+                    balanceClass = 'text-yellow-600 font-bold';
+                    statusText = 'Saldo Rendah';
+                } else {
+                    balanceClass = 'text-green-600 font-bold';
+                    statusText = 'Normal';
+                }
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900">${index + 1}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">${santri.nama}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${santri.kelas}</td>
+                    <td class="px-6 py-4 text-sm ${balanceClass}">${formatRupiah(santri.saldo)}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${santri.saldo < 0 ? 'bg-red-100 text-red-800' : santri.saldo <= 20000 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        ${currentUser && currentUser.role === 'admin' && santri.saldo <= 20000 ? `
+                            <button onclick="sendWhatsApp('${santri.nama}', ${santri.saldo}, '${santri.noHpWali}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                <i class="fab fa-whatsapp mr-1"></i>Kirim WA
+                            </button>
+                        ` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Search Santri Functions for Penambahan
+        function searchSantriPenambahan(query) {
+            const searchResults = document.getElementById('searchResultsPenambahan');
+            
+            if (query.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+            
+            const santriUsers = users.filter(u => u.role === 'santri');
+            const filteredSantri = santriUsers.filter(santri => 
+                santri.nama.toLowerCase().includes(query.toLowerCase()) ||
+                santri.kelas.toLowerCase().includes(query.toLowerCase()) ||
+                santri.username.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            searchResults.innerHTML = '';
+            
+            if (filteredSantri.length > 0) {
+                filteredSantri.forEach(santri => {
+                    const saldo = calculateSaldo(santri.id);
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'search-result p-3 border-b border-gray-200 last:border-b-0';
+                    resultDiv.onclick = () => selectSantriPenambahan(santri);
+                    resultDiv.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-medium text-gray-800">${santri.nama}</p>
+                                <p class="text-sm text-gray-600">Kelas: ${santri.kelas}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-medium ${saldo < 0 ? 'text-red-600' : saldo <= 20000 ? 'text-yellow-600' : 'text-green-600'}">
+                                    ${formatRupiah(saldo)}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    searchResults.appendChild(resultDiv);
+                });
+                searchResults.classList.remove('hidden');
+            } else {
+                const noResultDiv = document.createElement('div');
+                noResultDiv.className = 'p-3 text-center text-gray-500';
+                noResultDiv.textContent = 'Santri tidak ditemukan';
+                searchResults.appendChild(noResultDiv);
+                searchResults.classList.remove('hidden');
+            }
+        }
+
+        function selectSantriPenambahan(santri) {
+            document.getElementById('searchSantriPenambahan').value = santri.nama;
+            document.getElementById('searchResultsPenambahan').classList.add('hidden');
+            
+            document.getElementById('selectedUserIdPenambahan').value = santri.id;
+            document.getElementById('selectedSantriNamePenambahan').textContent = santri.nama;
+            document.getElementById('selectedSantriKelasPenambahan').textContent = santri.kelas;
+            document.getElementById('selectedSantriSaldoPenambahan').textContent = formatRupiah(calculateSaldo(santri.id));
+            
+            document.getElementById('selectedSantriInfoPenambahan').classList.remove('hidden');
+            document.getElementById('penambahanSaldoForm').classList.remove('hidden');
+            
+            document.getElementById('penambahanAmount').value = '';
+            document.getElementById('penambahanPaymentMethod').value = '';
+            document.getElementById('penambahanNote').value = '';
+        }
+
+        function clearPenambahanSaldo() {
+            document.getElementById('searchSantriPenambahan').value = '';
+            document.getElementById('searchResultsPenambahan').classList.add('hidden');
+            document.getElementById('selectedSantriInfoPenambahan').classList.add('hidden');
+            document.getElementById('penambahanSaldoForm').classList.add('hidden');
+        }
+
+        function submitPenambahanSaldo() {
+            const userId = parseInt(document.getElementById('selectedUserIdPenambahan').value);
+            const jumlahFormatted = document.getElementById('penambahanAmount').value;
+            const jumlah = parseFormattedNumber(jumlahFormatted);
+            const paymentMethod = document.getElementById('penambahanPaymentMethod').value;
+            const keterangan = document.getElementById('penambahanNote').value;
+            
+            if (!userId || !jumlah || !paymentMethod) {
+                showNotification('Mohon lengkapi semua field!', 'error');
+                return;
+            }
+            
+            const newTransaction = {
+                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                userId: userId,
+                jenis: 'masuk',
+                jumlah: jumlah,
+                keterangan: keterangan,
+                paymentMethod: paymentMethod,
+                tanggal: new Date(),
+                adminId: currentUser.id
+            };
+            
+            transactions.push(newTransaction);
+            saveTransactions();
+            
+            generateTransactionReceipt(newTransaction);
+            
+            clearPenambahanSaldo();
+            showNotification('Penambahan saldo berhasil diproses!', 'success');
+            
+            const cat = document.querySelector('.cat');
+            cat.classList.add('happy');
+            setTimeout(() => cat.classList.remove('happy'), 1500);
+            
+            updateDashboard();
+        }
+
+        // Search Santri Functions for Pengurangan
+        function searchSantriPengurangan(query) {
+            const searchResults = document.getElementById('searchResultsPengurangan');
+            
+            if (query.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+            
+            const santriUsers = users.filter(u => u.role === 'santri');
+            const filteredSantri = santriUsers.filter(santri => 
+                santri.nama.toLowerCase().includes(query.toLowerCase()) ||
+                santri.kelas.toLowerCase().includes(query.toLowerCase()) ||
+                santri.username.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            searchResults.innerHTML = '';
+            
+            if (filteredSantri.length > 0) {
+                filteredSantri.forEach(santri => {
+                    const saldo = calculateSaldo(santri.id);
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'search-result p-3 border-b border-gray-200 last:border-b-0';
+                    resultDiv.onclick = () => selectSantriPengurangan(santri);
+                    resultDiv.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-medium text-gray-800">${santri.nama}</p>
+                                <p class="text-sm text-gray-600">Kelas: ${santri.kelas}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-medium ${saldo < 0 ? 'text-red-600' : saldo <= 20000 ? 'text-yellow-600' : 'text-green-600'}">
+                                    ${formatRupiah(saldo)}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    searchResults.appendChild(resultDiv);
+                });
+                searchResults.classList.remove('hidden');
+            } else {
+                const noResultDiv = document.createElement('div');
+                noResultDiv.className = 'p-3 text-center text-gray-500';
+                noResultDiv.textContent = 'Santri tidak ditemukan';
+                searchResults.appendChild(noResultDiv);
+                searchResults.classList.remove('hidden');
+            }
+        }
+
+        function selectSantriPengurangan(santri) {
+            document.getElementById('searchSantriPengurangan').value = santri.nama;
+            document.getElementById('searchResultsPengurangan').classList.add('hidden');
+            
+            document.getElementById('selectedUserIdPengurangan').value = santri.id;
+            document.getElementById('selectedSantriNamePengurangan').textContent = santri.nama;
+            document.getElementById('selectedSantriKelasPengurangan').textContent = santri.kelas;
+            document.getElementById('selectedSantriSaldoPengurangan').textContent = formatRupiah(calculateSaldo(santri.id));
+            
+            document.getElementById('selectedSantriInfoPengurangan').classList.remove('hidden');
+            document.getElementById('penguranganSaldoForm').classList.remove('hidden');
+            
+            document.getElementById('penguranganAmount').value = '';
+            document.getElementById('penguranganNote').value = '';
+        }
+
+        function clearPenguranganSaldo() {
+            document.getElementById('searchSantriPengurangan').value = '';
+            document.getElementById('searchResultsPengurangan').classList.add('hidden');
+            document.getElementById('selectedSantriInfoPengurangan').classList.add('hidden');
+            document.getElementById('penguranganSaldoForm').classList.add('hidden');
+        }
+
+        function submitPenguranganSaldo() {
+            const userId = parseInt(document.getElementById('selectedUserIdPengurangan').value);
+            const jumlahFormatted = document.getElementById('penguranganAmount').value;
+            const jumlah = parseFormattedNumber(jumlahFormatted);
+            const keterangan = document.getElementById('penguranganNote').value;
+            
+            if (!userId || !jumlah) {
+                showNotification('Mohon lengkapi semua field!', 'error');
+                return;
+            }
+            
+            const newTransaction = {
+                id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                userId: userId,
+                jenis: 'keluar',
+                jumlah: jumlah,
+                keterangan: keterangan,
+                tanggal: new Date(),
+                adminId: currentUser.id
+            };
+            
+            transactions.push(newTransaction);
+            saveTransactions();
+            
+            clearPenguranganSaldo();
+            showNotification('Pengurangan saldo berhasil diproses!', 'success');
+            
+            const cat = document.querySelector('.cat');
+            cat.classList.add('happy');
+            setTimeout(() => cat.classList.remove('happy'), 1500);
+            
+            updateDashboard();
+        }
+
+        // Generate small receipt with stamp and signature
+        function generateTransactionReceipt(transaction) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                unit: 'mm',
+                format: [80, 150],
+                orientation: 'portrait'
+            });
+            
+            const user = users.find(u => u.id === transaction.userId);
+            const admin = users.find(u => u.id === transaction.adminId);
+            const currentSaldo = calculateSaldo(transaction.userId);
+            
+            // Add logo if available
+            if (settings.logo) {
+                try {
+                    doc.addImage(settings.logo, 'JPEG', 20, 5, 40, 20);
+                } catch (e) {
+                    console.log('Logo tidak dapat ditambahkan');
+                }
+            }
+            
+            // Header
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.text('PONDOK PESANTREN', 40, 30, { align: 'center' });
+            doc.text('AL-KHOIR PALEMBANI', 40, 35, { align: 'center' });
+            
+            doc.setFontSize(6);
+            doc.setFont(undefined, 'normal');
+            doc.text('Jl. Soekarno Hatta Lingkar Barat No. 234', 40, 40, { align: 'center' });
+            doc.text('NSPP: 502316710040', 40, 44, { align: 'center' });
+            
+            doc.line(5, 47, 75, 47);
+            
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.text('NOTA PENAMBAHAN SALDO', 40, 53, { align: 'center' });
+            
+            doc.setFontSize(7);
+            doc.setFont(undefined, 'normal');
+            doc.text(`No: ${transaction.id.toString().padStart(6, '0')}`, 5, 60);
+            doc.text(`Tgl: ${formatDateShort(transaction.tanggal)}`, 5, 65);
+            
+            doc.text(`Nama: ${user.nama}`, 5, 72);
+            doc.text(`Kelas: ${user.kelas}`, 5, 77);
+            doc.text(`Jumlah: ${formatRupiah(transaction.jumlah)}`, 5, 82);
+            doc.text(`Metode: ${transaction.paymentMethod || '-'}`, 5, 87);
+            doc.text(`Keterangan: ${transaction.keterangan || '-'}`, 5, 92);
+            doc.text(`Saldo: ${formatRupiah(currentSaldo)}`, 5, 97);
+            
+            doc.line(5, 100, 75, 100);
+            
+            doc.setFontSize(6);
+            doc.text('Bendahara', 10, 105);
+            doc.text('Orang Tua/Wali', 50, 105);
+            
+            // Add circular stamp
+            doc.setLineWidth(0.5);
+            doc.circle(38, 115, 12);
+            doc.circle(38, 115, 10);
+            
+            doc.setFontSize(6);
+            doc.setFont(undefined, 'bold');
+            doc.text('LUNAS', 38, 113, { align: 'center' });
+            doc.setFontSize(4);
+            doc.text('PONDOK PESANTREN', 38, 116, { align: 'center' });
+            doc.text('AL-KHOIR PALEMBANI', 38, 119, { align: 'center' });
+            
+            doc.setFontSize(6);
+            doc.setFont(undefined, 'normal');
+            doc.text('Imamatul Azizah, S.Pd', 10, 135);
+            doc.text('(...........................)', 50, 135);
+            
+            doc.setFontSize(5);
+            doc.text('Simpan nota ini sebagai bukti', 40, 142, { align: 'center' });
+            doc.text('Terima kasih atas kepercayaan Anda', 40, 146, { align: 'center' });
+            
+            doc.save(`nota-${user.nama}-${formatDateShort(transaction.tanggal)}.pdf`);
+            
+            setTimeout(() => {
+                if (confirm('Apakah ingin mengirim nota ini ke WhatsApp wali santri?')) {
+                    sendReceiptToParent(user, transaction, currentSaldo);
+                }
+            }, 1000);
+        }
+
+        function downloadNota(transactionId) {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (!transaction) return;
+            
+            generateTransactionReceipt(transaction);
+        }
+
+        function sendNotaToParent(transactionId) {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (!transaction) return;
+            
+            const user = users.find(u => u.id === transaction.userId);
+            const currentSaldo = calculateSaldo(transaction.userId);
+            
+            sendReceiptToParent(user, transaction, currentSaldo);
+        }
+
+        function sendReceiptToParent(user, transaction, currentSaldo) {
+            if (!user.noHpWali) {
+                showNotification('Nomor HP wali tidak tersedia!', 'error');
+                return;
+            }
+            
+            const message = `Assalamu'alaikum Warahmatullahi Wabarakatuh
+
+NOTA PENAMBAHAN SALDO TABUNGAN SANTRI
+Pondok Pesantren Al-Khoir Palembani
+
+Tanggal: ${formatDate(transaction.tanggal)}
+No. Transaksi: ${transaction.id.toString().padStart(6, '0')}
+
+Nama Santri: ${user.nama}
+Kelas: ${user.kelas}
+Jumlah Penambahan: ${formatRupiah(transaction.jumlah)}
+Metode Pembayaran: ${transaction.paymentMethod || '-'}
+Keterangan: ${transaction.keterangan || '-'}
+Saldo Setelah Transaksi: ${formatRupiah(currentSaldo)}
+
+Terima kasih atas kepercayaan Anda.
+
+Wassalamu'alaikum Warahmatullahi Wabarakatuh
+
+Pondok Pesantren Al-Khoir Palembani`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${user.noHpWali.replace(/\D/g, '')}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function loadNotaHistory() {
+            const tbody = document.getElementById('notaHistoryTableBody');
+            tbody.innerHTML = '';
+
+            const depositTransactions = transactions.filter(t => t.jenis === 'masuk');
+            depositTransactions.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+            depositTransactions.forEach((transaction, index) => {
+                const user = users.find(u => u.id === transaction.userId);
+                
+                const row = document.createElement('tr');
+                row.className = 'slide-in';
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900">${index + 1}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${formatDate(transaction.tanggal)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${user ? user.nama : 'Unknown'}</td>
+                    <td class="px-6 py-4 text-sm text-green-600 font-medium">${formatRupiah(transaction.jumlah)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${transaction.paymentMethod || '-'}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <div class="flex space-x-2">
+                            <button onclick="downloadNota(${transaction.id})" class="btn-pink text-white px-3 py-1 rounded text-xs hover:bg-pink-600 transition-colors">
+                                <i class="fas fa-download mr-1"></i>Download
+                            </button>
+                            <button onclick="sendNotaToParent(${transaction.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                <i class="fab fa-whatsapp mr-1"></i>Kirim WA
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterNotaHistory() {
+            loadNotaHistory();
+            showNotification('Filter diterapkan!', 'success');
+        }
+
+        function deleteTransaction(transactionId) {
+            if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+                transactions = transactions.filter(t => t.id !== transactionId);
+                saveTransactions();
+                loadTransaksi();
+                updateDashboard();
+                showNotification('Transaksi berhasil dihapus!', 'success');
+            }
+        }
+
+        function loadTransaksi() {
+            const tbody = document.getElementById('transaksiTableBody');
+            tbody.innerHTML = '';
+
+            let filteredTransactions = [...transactions];
+            
+            if (currentUser.role === 'santri') {
+                filteredTransactions = filteredTransactions.filter(t => t.userId === currentUser.id);
+            }
+            
+            filteredTransactions.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+            filteredTransactions.forEach(transaction => {
+                const user = users.find(u => u.id === transaction.userId);
+                const admin = users.find(u => u.id === transaction.adminId);
+                
+                const row = document.createElement('tr');
+                row.className = 'transaction-row slide-in';
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900">${formatDate(transaction.tanggal)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${user ? user.nama : 'Unknown'}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${transaction.jenis === 'masuk' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${transaction.jenis === 'masuk' ? 'Masuk' : 'Keluar'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium ${transaction.jenis === 'masuk' ? 'text-green-600' : 'text-red-600'}">
+                        ${transaction.jenis === 'masuk' ? '+' : '-'}${formatRupiah(transaction.jumlah)}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${transaction.keterangan || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${admin ? admin.nama : 'System'}</td>
+                    <td class="px-6 py-4 text-sm">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <div class="flex space-x-2">
+                                ${transaction.jenis === 'masuk' ? `
+                                    <button onclick="downloadNota(${transaction.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                        <i class="fas fa-receipt mr-1"></i>Nota
+                                    </button>
+                                ` : ''}
+                                <button onclick="deleteTransaction(${transaction.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                    <i class="fas fa-trash mr-1"></i>Hapus
+                                </button>
+                            </div>
+                        ` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterTransaksi() {
+            loadTransaksi();
+            showNotification('Filter diterapkan!', 'success');
+        }
+
+        // Manage Santri functions
+        function loadManageSantri() {
+            const tbody = document.getElementById('manageSantriTableBody');
+            tbody.innerHTML = '';
+
+            const santriUsers = users.filter(u => u.role === 'santri');
+
+            santriUsers.forEach(santri => {
+                const row = document.createElement('tr');
+                row.className = 'slide-in';
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900">${santri.username}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">${santri.nama}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${santri.kelas}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${santri.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${santri.status.charAt(0).toUpperCase() + santri.status.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${santri.noHpWali || '-'}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <div class="flex space-x-2">
+                            <button onclick="editSantri(${santri.id})" class="btn-pink text-white px-3 py-1 rounded text-xs hover:bg-pink-600 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="sendLoginToWhatsApp('${santri.username}', '${santri.password}', '${santri.noHpWali}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                <i class="fab fa-whatsapp mr-1"></i>Kirim Login
+                            </button>
+                            <button onclick="deleteSantri(${santri.id}, '${santri.nama}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                <i class="fas fa-trash mr-1"></i>Hapus
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function showAddSantriModal() {
+            document.getElementById('newSantriUsername').value = '';
+            document.getElementById('newSantriPassword').value = '';
+            document.getElementById('newSantriNama').value = '';
+            document.getElementById('newSantriKelas').value = '';
+            document.getElementById('newSantriHP').value = '';
+            
+            showModal('addSantriModal');
+        }
+
+        function addSantri() {
+            const username = document.getElementById('newSantriUsername').value;
+            const password = document.getElementById('newSantriPassword').value;
+            const nama = document.getElementById('newSantriNama').value;
+            const kelas = document.getElementById('newSantriKelas').value;
+            const noHpWali = document.getElementById('newSantriHP').value;
+            
+            if (users.find(u => u.username === username)) {
+                showNotification('Username sudah digunakan!', 'error');
+                return;
+            }
+            
+            const newSantri = {
+                id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
+                username: username,
+                password: password,
+                nama: nama,
+                role: 'santri',
+                kelas: kelas,
+                status: 'aktif',
+                noHpWali: noHpWali
+            };
+            
+            users.push(newSantri);
+            saveUsers();
+            
+            closeModal('addSantriModal');
+            loadManageSantri();
+            updateDashboard();
+            showNotification('Santri berhasil ditambahkan!', 'success');
+        }
+
+        function editSantri(id) {
+            const santri = users.find(u => u.id === id);
+            if (!santri) return;
+            
+            document.getElementById('editSantriId').value = santri.id;
+            document.getElementById('editSantriUsername').value = santri.username;
+            document.getElementById('editSantriPassword').value = '';
+            document.getElementById('editSantriNama').value = santri.nama;
+            document.getElementById('editSantriKelas').value = santri.kelas;
+            document.getElementById('editSantriStatus').value = santri.status;
+            document.getElementById('editSantriHP').value = santri.noHpWali || '';
+            
+            showModal('editSantriModal');
+        }
+
+        function updateSantri() {
+            const id = parseInt(document.getElementById('editSantriId').value);
+            const username = document.getElementById('editSantriUsername').value;
+            const password = document.getElementById('editSantriPassword').value;
+            const nama = document.getElementById('editSantriNama').value;
+            const kelas = document.getElementById('editSantriKelas').value;
+            const status = document.getElementById('editSantriStatus').value;
+            const noHpWali = document.getElementById('editSantriHP').value;
+            
+            const santri = users.find(u => u.id === id);
+            if (!santri) return;
+            
+            if (users.find(u => u.username === username && u.id !== id)) {
+                showNotification('Username sudah digunakan!', 'error');
+                return;
+            }
+            
+            santri.username = username;
+            if (password) santri.password = password;
+            santri.nama = nama;
+            santri.kelas = kelas;
+            santri.status = status;
+            santri.noHpWali = noHpWali;
+            
+            saveUsers();
+            
+            closeModal('editSantriModal');
+            loadManageSantri();
+            updateDashboard();
+            showNotification('Santri berhasil diperbarui!', 'success');
+        }
+
+        function deleteSantri(id, nama) {
+            if (confirm(`Apakah Anda yakin ingin menghapus santri ${nama}? Semua data transaksi juga akan terhapus.`)) {
+                users = users.filter(u => u.id !== id);
+                transactions = transactions.filter(t => t.userId !== id);
+                
+                saveUsers();
+                saveTransactions();
+                
+                loadManageSantri();
+                updateDashboard();
+                showNotification('Santri berhasil dihapus!', 'success');
+            }
+        }
+
+        function showNaikKelasModal() {
+            showModal('naikKelasModal');
+        }
+
+        function naikKelas(fromKelas) {
+            let toKelas;
+            let message;
+            let newStatus = 'aktif';
+            
+            switch(fromKelas) {
+                case '7':
+                    toKelas = '8';
+                    message = 'Naik Kelas 7 → 8';
+                    break;
+                case '8':
+                    toKelas = '9';
+                    message = 'Naik Kelas 8 → 9';
+                    break;
+                case '9':
+                    toKelas = 'Alumni MTS';
+                    newStatus = 'alumni';
+                    message = 'Kelas 9 → Alumni MTS';
+                    break;
+                case '10':
+                    toKelas = '11';
+                    message = 'Naik Kelas 10 → 11';
+                    break;
+                case '11':
+                    toKelas = '12';
+                    message = 'Naik Kelas 11 → 12';
+                    break;
+                case '12':
+                    toKelas = 'Alumni MA';
+                    newStatus = 'alumni';
+                    message = 'Kelas 12 → Alumni MA';
+                    break;
+            }
+            
+            if (confirm(`Apakah Anda yakin ingin ${message}?`)) {
+                let updated = 0;
+                users.forEach(user => {
+                    if (user.role === 'santri' && user.kelas && user.kelas.startsWith(fromKelas)) {
+                        if (toKelas === 'Alumni MTS' || toKelas === 'Alumni MA') {
+                            user.kelas = toKelas;
+                            user.status = newStatus;
+                        } else {
+                            const suffix = user.kelas.endsWith('A') ? 'A' : 'B';
+                            user.kelas = toKelas + suffix;
+                        }
+                        updated++;
+                    }
+                });
+                
+                if (updated > 0) {
+                    saveUsers();
+                    loadManageSantri();
+                    updateDashboard();
+                    showNotification(`${updated} santri berhasil naik kelas!`, 'success');
+                } else {
+                    showNotification(`Tidak ada santri di kelas ${fromKelas} yang dapat dinaikkan.`, 'warning');
+                }
+                
+                closeModal('naikKelasModal');
+            }
+        }
+
+        function showRekapPerSantriModal() {
+            const select = document.getElementById('rekapSantriSelect');
+            select.innerHTML = '<option value="">Pilih Santri</option>';
+            
+            const santriUsers = users.filter(u => u.role === 'santri');
+            santriUsers.forEach(santri => {
+                const option = document.createElement('option');
+                option.value = santri.id;
+                option.textContent = `${santri.nama} - ${santri.kelas}`;
+                select.appendChild(option);
+            });
+            
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            document.getElementById('rekapStartDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('rekapEndDate').value = lastDay.toISOString().split('T')[0];
+            
+            showModal('rekapPerSantriModal');
+        }
+
+        function generateRekapPerSantri() {
+            const santriId = parseInt(document.getElementById('rekapSantriSelect').value);
+            const startDate = new Date(document.getElementById('rekapStartDate').value);
+            const endDate = new Date(document.getElementById('rekapEndDate').value);
+            
+            if (!santriId) {
+                showNotification('Pilih santri terlebih dahulu!', 'error');
+                return;
+            }
+            
+            document.getElementById('loadingRekap').classList.remove('hidden');
+            
+            setTimeout(() => {
+                const santri = users.find(u => u.id === santriId);
+                if (!santri) return;
+                
+                const periodTransactions = transactions.filter(t => {
+                    const transactionDate = new Date(t.tanggal);
+                    return t.userId === santriId && 
+                           transactionDate >= startDate && 
+                           transactionDate <= endDate;
+                });
+                
+                periodTransactions.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Header
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('PONDOK PESANTREN AL-KHOIR PALEMBANI', 105, 20, { align: 'center' });
+                
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('Jl. Soekarno Hatta Lingkar Barat No. 234 Palembang Sumatera Selatan', 105, 28, { align: 'center' });
+                doc.text('Email: alkhoirislamicschool@gmail.com | Instagram: ponpes_alkhoirpalembani', 105, 34, { align: 'center' });
+                doc.text('NSPP: 502316710040', 105, 40, { align: 'center' });
+                
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text('REKAP TABUNGAN SANTRI', 105, 55, { align: 'center' });
+                
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Nama: ${santri.nama}`, 20, 75);
+                doc.text(`Kelas: ${santri.kelas}`, 20, 85);
+                doc.text(`Periode: ${formatDate(startDate)} - ${formatDate(endDate)}`, 20, 95);
+                
+                const totalPenambahan = periodTransactions.filter(t => t.jenis === 'masuk').reduce((sum, t) => sum + t.jumlah, 0);
+                const totalPenarikan = periodTransactions.filter(t => t.jenis === 'keluar').reduce((sum, t) => sum + t.jumlah, 0);
+                const currentSaldo = calculateSaldo(santriId);
+                
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text('RINGKASAN:', 20, 110);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Total Penambahan: ${formatRupiah(totalPenambahan)}`, 20, 120);
+                doc.text(`Total Penarikan: ${formatRupiah(totalPenarikan)}`, 20, 130);
+                doc.text(`Sisa Saldo: ${formatRupiah(currentSaldo)}`, 20, 140);
+                
+                if (periodTransactions.length > 0) {
+                    const transactionsBeforePeriod = transactions.filter(t => {
+                        const transactionDate = new Date(t.tanggal);
+                        return t.userId === santriId && transactionDate < startDate;
+                    });
+                    
+                    let runningBalance = transactionsBeforePeriod.reduce((balance, t) => {
+                        return t.jenis === 'masuk' ? balance + t.jumlah : balance - t.jumlah;
+                    }, 0);
+                    
+                    const tableData = periodTransactions.map((transaction, index) => {
+                        runningBalance += transaction.jenis === 'masuk' ? transaction.jumlah : -transaction.jumlah;
+                        
+                        return [
+                            index + 1,
+                            formatDate(transaction.tanggal),
+                            transaction.jenis === 'masuk' ? 'Penambahan' : 'Penarikan',
+                            formatRupiah(transaction.jumlah),
+                            transaction.keterangan || '-',
+                            formatRupiah(runningBalance)
+                        ];
+                    });
+                    
+                    doc.autoTable({
+                        head: [['No', 'Tanggal', 'Jenis', 'Jumlah', 'Keterangan', 'Sisa Saldo']],
+                        body: tableData,
+                        startY: 155,
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [236, 72, 153] }
+                    });
+                } else {
+                    doc.text('Tidak ada transaksi pada periode ini.', 20, 160);
+                }
+                
+                lastGeneratedRekapData = {
+                    santri: santri,
+                    startDate: startDate,
+                    endDate: endDate,
+                    totalPenambahan: totalPenambahan,
+                    totalPenarikan: totalPenarikan,
+                    currentSaldo: currentSaldo,
+                    transactions: periodTransactions
+                };
+                
+                document.getElementById('loadingRekap').classList.add('hidden');
+                document.getElementById('sendRekapBtn').disabled = false;
+                
+                doc.save(`rekap-tabungan-${santri.nama}-${formatDate(startDate)}-${formatDate(endDate)}.pdf`);
+                
+                showNotification('Rekap berhasil dibuat!', 'success');
+                
+            }, 1500);
+        }
+
+        function sendRekapToParent() {
+            if (!lastGeneratedRekapData) return;
+            
+            const { santri, startDate, endDate, totalPenambahan, totalPenarikan, currentSaldo } = lastGeneratedRekapData;
+            
+            if (!santri.noHpWali) {
+                showNotification('Nomor HP wali tidak tersedia!', 'error');
+                return;
+            }
+            
+            const message = `Assalamu'alaikum Warahmatullahi Wabarakatuh
+
+REKAP TABUNGAN SANTRI
+Pondok Pesantren Al-Khoir Palembani
+
+Nama: ${santri.nama}
+Kelas: ${santri.kelas}
+Periode: ${formatDate(startDate)} - ${formatDate(endDate)}
+
+RINGKASAN:
+Total Penambahan: ${formatRupiah(totalPenambahan)}
+Total Penarikan: ${formatRupiah(totalPenarikan)}
+Sisa Saldo: ${formatRupiah(currentSaldo)}
+
+Terima kasih atas kepercayaan Anda.
+
+Wassalamu'alaikum Warahmatullahi Wabarakatuh
+
+Pondok Pesantren Al-Khoir Palembani`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${santri.noHpWali.replace(/\D/g, '')}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+            
+            closeModal('rekapPerSantriModal');
+        }
+
+        function loadSettings() {
+            const admin = users.find(u => u.role === 'admin');
+            document.getElementById('adminUsername').value = admin ? admin.username : '';
+            document.getElementById('adminPassword').value = '';
+            
+            document.getElementById('settingsBankName').value = settings.bankName;
+            document.getElementById('settingsAccountNumber').value = settings.accountNumber;
+            document.getElementById('settingsAccountOwner').value = settings.accountOwner;
+            
+            if (settings.logo) {
+                document.getElementById('logoImage').src = settings.logo;
+            }
+        }
+
+        function updateAdminAccount() {
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            const admin = users.find(u => u.role === 'admin');
+            if (!admin) return;
+            
+            const oldUsername = admin.username;
+            const oldPassword = admin.password;
+            
+            admin.username = username;
+            if (password) admin.password = password;
+            
+            saveUsers();
+            
+            if (username !== oldUsername || password) {
+                sendAdminCredentialsToWhatsApp(username, password || oldPassword, true);
+            }
+            
+            showNotification('Pengaturan akun berhasil diperbarui!', 'success');
+        }
+
+        function sendAdminCredentialsToWhatsApp(username, password, isUpdate = false) {
+            const admin = users.find(u => u.role === 'admin');
+            const currentUsername = username || admin.username;
+            const currentPassword = password || admin.password;
+            
+            const message = `Assalamu'alaikum Warahmatullahi Wabarakatuh
+
+${isUpdate ? 'Update Data Login Admin' : 'Data Login Admin'} Tabungan Santri Pondok Pesantren Al-Khoir Palembani:
+
+Username: ${currentUsername}
+Password: ${currentPassword}
+Email: ${adminEmail}
+
+Harap simpan data login ini dengan aman.
+
+Terima kasih.
+
+Wassalamu'alaikum Warahmatullahi Wabarakatuh
+
+Pondok Pesantren Al-Khoir Palembani`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${adminPhoneNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function updateBankSettings() {
+            settings.bankName = document.getElementById('settingsBankName').value;
+            settings.accountNumber = document.getElementById('settingsAccountNumber').value;
+            settings.accountOwner = document.getElementById('settingsAccountOwner').value;
+            
+            saveSettings();
+            showNotification('Pengaturan rekening berhasil diperbarui!', 'success');
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logoImage').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveLogo() {
+            const logoImage = document.getElementById('logoImage');
+            if (logoImage.src) {
+                settings.logo = logoImage.src;
+                document.getElementById('headerLogo').src = logoImage.src;
+                saveSettings();
+                showNotification('Logo berhasil disimpan!', 'success');
+            }
+        }
+
+        function sendWhatsApp(nama, saldo, noHP) {
+            if (!noHP) {
+                showNotification('Nomor HP wali tidak tersedia!', 'error');
+                return;
+            }
+            
+            const message = `Assalamu'alaikum Warahmatullahi Wabarakatuh
+
+Pemberitahuan untuk Orang Tua/Wali Santri:
+Kami beritahukan bahwa saldo ananda ${nama} saat ini tersisa ${formatRupiah(saldo)}.
+
+Bagi wali santri yang ingin menambah uang jajan ananda, dapat melakukan transfer ke rekening:
+${settings.bankName} ${settings.accountNumber} a/n ${settings.accountOwner}
+
+Setelah transfer, mohon konfirmasi melalui WhatsApp Admin Pondok Pesantren Al-Khoir Palembani dengan bukti transfer.
+
+Terima kasih atas perhatiannya.
+
+Wassalamu'alaikum Warahmatullahi Wabarakatuh
+
+Pondok Pesantren Al-Khoir Palembani`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${noHP.replace(/\D/g, '')}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function sendLoginToWhatsApp(username, password, noHP) {
+            if (!noHP) {
+                showNotification('Nomor HP wali tidak tersedia!', 'error');
+                return;
+            }
+            
+            const message = `Assalamu'alaikum Warahmatullahi Wabarakatuh
+
+Data Login Tabungan Santri Pondok Pesantren Al-Khoir Palembani:
+
+Username: ${username}
+Password: ${password}
+
+Silakan login ke sistem untuk melihat saldo dan riwayat transaksi ananda.
+
+Terima kasih.
+
+Wassalamu'alaikum Warahmatullahi Wabarakatuh
+
+Pondok Pesantren Al-Khoir Palembani`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${noHP.replace(/\D/g, '')}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('PONDOK PESANTREN AL-KHOIR PALEMBANI', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text('Jl. Soekarno Hatta Lingkar Barat No. 234 Palembang Sumatera Selatan', 105, 28, { align: 'center' });
+            doc.text('Email: alkhoirislamicschool@gmail.com | Instagram: ponpes_alkhoirpalembani', 105, 34, { align: 'center' });
+            doc.text('NSPP: 502316710040', 105, 40, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('REKAP SALDO SANTRI', 105, 55, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Tanggal: ${formatDate(new Date())}`, 20, 70);
+            
+            const santriUsers = users.filter(u => u.role === 'santri');
+            const santriData = santriUsers.map((santri, index) => [
+                index + 1,
+                santri.nama,
+                santri.kelas,
+                santri.status.charAt(0).toUpperCase() + santri.status.slice(1),
+                formatRupiah(calculateSaldo(santri.id))
+            ]);
+            
+            doc.autoTable({
+                head: [['No', 'Nama Santri', 'Kelas', 'Status', 'Sisa Saldo']],
+                body: santriData,
+                startY: 80,
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [236, 72, 153] }
+            });
+            
+            const finalY = doc.lastAutoTable.finalY + 10;
+            const totalSaldo = santriUsers.reduce((sum, s) => sum + calculateSaldo(s.id), 0);
+            const minusSantri = santriUsers.filter(s => calculateSaldo(s.id) < 0);
+            const totalMinus = minusSantri.reduce((sum, s) => sum + calculateSaldo(s.id), 0);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text(`Total Keseluruhan Saldo: ${formatRupiah(totalSaldo)}`, 20, finalY);
+            doc.text(`Total Saldo Minus: ${formatRupiah(totalMinus)}`, 20, finalY + 7);
+            doc.text(`Santri dengan Saldo Minus: ${minusSantri.length} orang`, 20, finalY + 14);
+            
+            if (minusSantri.length > 0) {
+                const minusTableData = minusSantri.map((santri, index) => [
+                    index + 1,
+                    santri.nama,
+                    santri.kelas,
+                    formatRupiah(calculateSaldo(santri.id))
+                ]);
+                
+                doc.autoTable({
+                    head: [['No', 'Nama Santri', 'Kelas', 'Total Minus']],
+                    body: minusTableData,
+                    startY: finalY + 25,
+                    styles: { fontSize: 9 },
+                    headStyles: { fillColor: [239, 68, 68] }
+                });
+            }
+            
+            doc.save('rekap-saldo-santri.pdf');
+        }
+
+        function exportDailyReport() {
+            const today = new Date();
+            const todayTransactions = transactions.filter(t => {
+                const transactionDate = new Date(t.tanggal);
+                return transactionDate.toDateString() === today.toDateString();
+            });
+            
+            exportTransactionReport(todayTransactions, 'Laporan Harian', formatDate(today));
+        }
+
+        function exportMonthlyReport() {
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            
+            const monthlyTransactions = transactions.filter(t => {
+                const transactionDate = new Date(t.tanggal);
+                return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            });
+            
+            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                              'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            exportTransactionReport(monthlyTransactions, 'Laporan Bulanan', `${monthNames[currentMonth]} ${currentYear}`);
+        }
+
+        function exportTransactionReport(transactionData, title, period) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('PONDOK PESANTREN AL-KHOIR PALEMBANI', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text('Jl. Soekarno Hatta Lingkar Barat No. 234 Palembang Sumatera Selatan', 105, 28, { align: 'center' });
+            doc.text('Email: alkhoirislamicschool@gmail.com | Instagram: ponpes_alkhoirpalembani', 105, 34, { align: 'center' });
+            doc.text('NSPP: 502316710040', 105, 40, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(title.toUpperCase(), 105, 55, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Periode: ${period}`, 105, 65, { align: 'center' });
+            
+            const reportData = transactionData.map((transaction, index) => {
+                const user = users.find(u => u.id === transaction.userId);
+                const admin = users.find(u => u.id === transaction.adminId);
+                
+                return [
+                    index + 1,
+                    formatDate(transaction.tanggal),
+                    user ? user.nama : 'Unknown',
+                    transaction.jenis === 'masuk' ? 'Masuk' : 'Keluar',
+                    formatRupiah(transaction.jumlah),
+                    transaction.keterangan || '-',
+                    admin ? admin.nama : 'System'
+                ];
+            });
+            
+            doc.autoTable({
+                head: [['No', 'Tanggal', 'Santri', 'Jenis', 'Jumlah', 'Keterangan', 'Admin']],
+                body: reportData,
+                startY: 80,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [236, 72, 153] }
+            });
+            
+            const finalY = doc.lastAutoTable.finalY + 10;
+            const totalMasuk = transactionData.filter(t => t.jenis === 'masuk').reduce((sum, t) => sum + t.jumlah, 0);
+            const totalKeluar = transactionData.filter(t => t.jenis === 'keluar').reduce((sum, t) => sum + t.jumlah, 0);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text(`Total Pemasukan: ${formatRupiah(totalMasuk)}`, 20, finalY);
+            doc.text(`Total Pengeluaran: ${formatRupiah(totalKeluar)}`, 20, finalY + 7);
+            doc.text(`Total Transaksi: ${transactionData.length}`, 20, finalY + 14);
+            
+            const fileName = title.toLowerCase().replace(/\s+/g, '-') + '.pdf';
+            doc.save(fileName);
+        }
+
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatDateShort(date) {
+            return new Date(date).toLocaleDateString('id-ID', {
+                year: '2-digit',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            
+            notification.className = 'notification p-4 rounded-lg shadow-lg max-w-md';
+            switch(type) {
+                case 'success':
+                    notification.classList.add('bg-green-500', 'text-white');
+                    break;
+                case 'error':
+                    notification.classList.add('bg-red-500', 'text-white');
+                    break;
+                case 'warning':
+                    notification.classList.add('bg-yellow-500', 'text-white');
+                    break;
+                default:
+                    notification.classList.add('bg-blue-500', 'text-white');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            
+            if (modalId === 'rekapPerSantriModal') {
+                document.getElementById('sendRekapBtn').disabled = true;
+                document.getElementById('loadingRekap').classList.add('hidden');
+                lastGeneratedRekapData = null;
+            }
+        }
+
+        function refreshData() {
+            updateDashboard();
+            showNotification('Data berhasil diperbarui!', 'success');
+        }
+
+        function handleCatClick() {
+            const cat = document.querySelector('.cat');
+            cat.classList.add('happy');
+            setTimeout(() => cat.classList.remove('happy'), 1500);
+            
+            const messages = [
+                'Meow! Semoga tabungan santri selalu berkah!',
+                'Purr... Jangan lupa cek saldo yang menipis ya!',
+                'Meow meow! Sistem berjalan dengan baik!',
+                'Purr purr... Semangat mengelola tabungan!',
+                'Meow! Aku kucing penjaga tabungan!'
+            ];
+            
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            showNotification(randomMessage, 'info');
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = event.target.closest('button[onclick="toggleSidebar()"]');
+            
+            if (!sidebar.contains(event.target) && !sidebarToggle && window.innerWidth <= 1024) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(event) {
+            const searchContainers = ['#penambahanSaldoContent', '#penguranganSaldoContent'];
+            const searchResults = ['#searchResultsPenambahan', '#searchResultsPengurangan'];
+            
+            searchContainers.forEach((container, index) => {
+                const searchContainer = event.target.closest(container);
+                const searchResult = document.querySelector(searchResults[index]);
+                
+                if (!searchContainer && searchResult && !searchResult.classList.contains('hidden')) {
+                    searchResult.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
